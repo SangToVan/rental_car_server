@@ -3,12 +3,14 @@ package com.sangto.rental_car_server.domain.entity;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 
 @Entity
 @Table(name = "users")
@@ -29,6 +31,15 @@ public class User implements UserDetails {
 
     @Enumerated(EnumType.STRING)
     private EUserRole role;
+
+    @Column(name = "birthday")
+    @Temporal(TemporalType.DATE)
+    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    private Date birthday;
+
+    private String citizenId;
+    private String phoneNumber;
+    private String address;
 
     private boolean isActive;
 

@@ -1,23 +1,18 @@
 package com.sangto.rental_car_server.domain.dto.user;
 
-import com.sangto.rental_car_server.domain.enums.EUserRole;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import lombok.Builder;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
-@Builder
-public record UserDetailResponseDTO(
-        Integer userId,
+public record UpdUserRequestDTO(
         String username,
-        String email,
         @Temporal(TemporalType.DATE) @DateTimeFormat(pattern = "yyyy/MM/dd") Date birthday,
         String citizenId,
+        @Pattern(regexp = "^0[0-9]{7,}$", message = "Phone number must start with 0 and contain at least 8 digits")
         String phoneNumber,
-        String address,
-        boolean isActive,
-        EUserRole role
+        String address
 ) {
 }

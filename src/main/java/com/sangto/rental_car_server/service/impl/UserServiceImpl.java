@@ -1,6 +1,7 @@
 package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
+import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
@@ -55,6 +56,23 @@ public class UserServiceImpl implements UserService {
                             .build());
         } catch (Exception e) {
             throw new AppException("Register unsuccessfully");
+        }
+    }
+
+    @Override
+    public Response<UserDetailResponseDTO> updateUser(Integer id, UpdUserRequestDTO requestDTO) {
+        Optional<User> oldUserOpt = userRepo.findById(id);
+        if (oldUserOpt.isEmpty()) throw new AppException("This user is not existed");
+
+        User oldUser = oldUserOpt.get();
+
+        User newUser = userMapper.updUserRequestDTOtoEntity(oldUser, requestDTO);
+
+        try {
+            User saveUser = userRepo.save(newUser);
+            return Response.successfulResponse("Update user successfully", userMapper.toUserDetailResponseDTO(saveUser));
+        } catch (Exception e) {
+            throw new AppException("Update user unsuccessfully");
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.sangto.rental_car_server.domain.mapper.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.RegisterUserResponseDTO;
+import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
@@ -31,6 +32,10 @@ public class UserMapperImpl implements UserMapper {
                 .userId(entity.getId())
                 .username(entity.getUsername())
                 .email(entity.getEmail())
+                .birthday(entity.getBirthday())
+                .citizenId(entity.getCitizenId())
+                .phoneNumber(entity.getPhoneNumber())
+                .address(entity.getAddress())
                 .isActive(entity.isActive())
                 .role(entity.getRole())
                 .build();
@@ -55,5 +60,16 @@ public class UserMapperImpl implements UserMapper {
                 .isActive(true)
                 .role(EUserRole.valueOf(requestDTO.role()))
                 .build();
+    }
+
+    @Override
+    public User updUserRequestDTOtoEntity(User oldUser, UpdUserRequestDTO requestDTO) {
+        oldUser.setUsername(requestDTO.username());
+        oldUser.setBirthday(requestDTO.birthday());
+        oldUser.setCitizenId(requestDTO.citizenId());
+        oldUser.setPhoneNumber(requestDTO.phoneNumber());
+        oldUser.setAddress(requestDTO.address());
+
+        return oldUser;
     }
 }
