@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.domain.dto.auth.ChangePasswordRequestDTO;
 import com.sangto.rental_car_server.domain.dto.auth.LoginRequestDTO;
 import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
@@ -45,5 +46,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .info(userMapper.toUserDetailResponseDTO(userResult.get()))
                 .build();
         return Response.successfulResponse("Login successfully", responseDTO);
+    }
+
+    @Override
+    public Response<String> changePassword(Integer userId, ChangePasswordRequestDTO requestDTO) {
+        Optional<User> findUser = userRepo.findById(userId);
+        if (findUser.isEmpty()) throw new AppException("This user is not exsited");
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        Boolean authenticated =
+                passwordEncoder.matches(requestDTO.oldPassword(), findUser.get().getPassword());
+        if (authenticated == false) throw new AppException("Current password is incorrect");
+
+        findUser.get().setPassword(passwordEncoder.encode(requestDTO.newPassword()));
+        try {
+            User saveUser = userRepo.save(findUser.get());
+            return Response.successfulResponse("Change password successful");
+        } catch (Exception e) {
+            throw new AppException("Change password failed");
+        }
     }
 }

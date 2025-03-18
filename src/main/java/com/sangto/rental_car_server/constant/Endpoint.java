@@ -8,6 +8,7 @@ public class Endpoint {
             public static final String BASE = PREFIX + "/auth";
             public static final String LOGIN = BASE + "/login";
             public static final String REGISTER = BASE + "/register";
+            public static final String CHANGE_PASSWORD = BASE + "/change-password";
         }
 
         public static final class User {
