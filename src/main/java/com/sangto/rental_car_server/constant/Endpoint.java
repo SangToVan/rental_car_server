@@ -4,6 +4,15 @@ public class Endpoint {
     public static final class V1 {
         public static final String PREFIX = "/api/v1";
 
+        public static final class Admin {
+            public static final String BASE = PREFIX + "/admin";
+            public static final String CAR = BASE + "/cars";
+            public static final String DETAIL_CAR = CAR + "/{id}";
+            public static final String ADD_CAR = CAR;
+            public static final String UPDATE_CAR = CAR + "/{id}";
+            public static final String VERIFY_CAR = CAR + "/{id}/verify";
+        }
+
         public static final class Auth {
             public static final String BASE = PREFIX + "/auth";
             public static final String LOGIN = BASE + "/login";
@@ -15,6 +24,14 @@ public class Endpoint {
             public static final String BASE = PREFIX + "/users";
             public static final String PROFILE = BASE + "/profile";
             public static final String CHANGE_ROLE = BASE + "/change-role";
+        }
+
+        public static final class Car {
+            public static final String BASE = PREFIX + "/cars";
+            public static final String GET_LIST_FOR_OWNER = BASE + "/own";
+            public static final String DETAILS = BASE + "/{id}";
+            public static final String DETAILS_FOR_OWNER = BASE + "/own/{id}";
+            public static final String STATUS = BASE + "/{id}/status";
         }
     }
 }

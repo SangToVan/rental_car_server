@@ -8,9 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -42,6 +40,14 @@ public class User implements UserDetails {
     private String address;
 
     private boolean isActive;
+
+    @OneToMany(
+            mappedBy = "carOwner",
+            targetEntity = Car.class,
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER,
+            orphanRemoval = true)
+    private List<Car> cars = new ArrayList<>();
 
 
     @Override
