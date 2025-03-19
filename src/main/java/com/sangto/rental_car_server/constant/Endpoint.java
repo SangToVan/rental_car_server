@@ -13,7 +13,8 @@ public class Endpoint {
 
         public static final class User {
             public static final String BASE = PREFIX + "/users";
-            public static final String PROFILE = BASE + "/profile";;
+            public static final String PROFILE = BASE + "/profile";
+            public static final String CHANGE_ROLE = BASE + "/change-role";
         }
     }
 }

@@ -12,6 +12,8 @@ import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 @Component
 @RequiredArgsConstructor
 public class UserMapperImpl implements UserMapper {
@@ -57,8 +59,12 @@ public class UserMapperImpl implements UserMapper {
         return User.builder()
                 .username(requestDTO.username())
                 .email(requestDTO.email())
+                .birthday(new Date())
+                .citizenId(null)
+                .phoneNumber(null)
+                .address(null)
                 .isActive(true)
-                .role(EUserRole.valueOf(requestDTO.role()))
+                .role(EUserRole.CUSTOMER)
                 .build();
     }
 

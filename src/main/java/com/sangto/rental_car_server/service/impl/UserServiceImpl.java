@@ -2,6 +2,7 @@ package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
+import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
@@ -73,6 +74,25 @@ public class UserServiceImpl implements UserService {
             return Response.successfulResponse("Update user successfully", userMapper.toUserDetailResponseDTO(saveUser));
         } catch (Exception e) {
             throw new AppException("Update user unsuccessfully");
+        }
+    }
+
+    @Override
+    public Response<UserDetailResponseDTO> changeUserRole(Integer id) {
+        Optional<User> findUser = userRepo.findById(id);
+        if (findUser.isEmpty()) throw new AppException("This user is not existed");
+        User user = findUser.get();
+        if (user.getRole() == EUserRole.CUSTOMER) {
+            user.setRole(EUserRole.OWNER);
+        } else {
+            user.setRole(EUserRole.CUSTOMER);
+        }
+
+        try {
+            User saveUser = userRepo.save(user);
+            return Response.successfulResponse("Change user role successfully", userMapper.toUserDetailResponseDTO(saveUser));
+        } catch (Exception e) {
+            throw new AppException("Change user role unsuccessfully");
         }
     }
 }

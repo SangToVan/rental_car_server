@@ -43,4 +43,12 @@ public class UserController {
                 (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(user.getId(), requestDTO));
     }
+
+    @Operation(summary = "Change role")
+    @GetMapping(Endpoint.V1.User.CHANGE_ROLE)
+    public ResponseEntity<Response<UserDetailResponseDTO>> changeRole() {
+        User user =
+                (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.status(HttpStatus.OK).body(userService.changeUserRole(user.getId()));
+    }
 }

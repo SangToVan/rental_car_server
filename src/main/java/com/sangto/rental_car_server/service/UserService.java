@@ -15,4 +15,6 @@ public interface UserService {
     Response<LoginResponseDTO> addUser(AddUserRequestDTO requestDTO) throws IOException;
 
     Response<UserDetailResponseDTO> updateUser(Integer id, UpdUserRequestDTO requestDTO);
+
+    Response<UserDetailResponseDTO> changeUserRole(Integer id);
 }

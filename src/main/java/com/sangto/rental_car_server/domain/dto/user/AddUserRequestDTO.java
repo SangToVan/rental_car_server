@@ -12,7 +12,6 @@ public record AddUserRequestDTO(
         String password,
         String confirmPassword,
         String username,
-        String email,
-        @EnumValid(name = "role", enumClass = EUserRole.class) String role
+        String email
 ) {
 }
