@@ -19,6 +19,7 @@ import org.springframework.web.filter.CorsFilter;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
     private final JwtTokenFilter jwtTokenFilter;
     private static final String CATCH_ALL_WILDCARDS = "/**";
     public static final String[] PUBLIC_ENDPOINTS = {
@@ -26,7 +27,9 @@ public class SecurityConfig {
             "/api-docs" + CATCH_ALL_WILDCARDS,
             "/swagger-ui" + CATCH_ALL_WILDCARDS,
             "/v3/api-docs" + CATCH_ALL_WILDCARDS,
-            Endpoint.V1.Auth.BASE + CATCH_ALL_WILDCARDS
+            Endpoint.V1.Auth.BASE + CATCH_ALL_WILDCARDS,
+            Endpoint.V1.Car.BASE,
+            Endpoint.V1.Car.DETAILS
     };
 
     @Bean

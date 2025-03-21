@@ -16,6 +16,9 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
             + " WHERE co.id = :ownerId ")
     List<Car> getListCarByOwner(@Param("ownerId") Integer ownerId);
 
+    @Query("SELECT DISTINCT c FROM Car c " + " JOIN FETCH c.carOwner co ")
+    List<Car> getAllCars();
+
     Optional<Car> findCarById(Integer id);
 
     List<Car> findAllByCarOwnerId(Integer ownerId);

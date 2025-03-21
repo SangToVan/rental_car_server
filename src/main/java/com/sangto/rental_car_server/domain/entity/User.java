@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,6 +41,15 @@ public class User implements UserDetails {
     private String address;
 
     private boolean isActive;
+
+    @JsonIgnore
+    @OneToMany(
+            mappedBy = "user",
+            targetEntity = Booking.class,
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true)
+    private List<Booking> bookings = new ArrayList<>();
 
     @OneToMany(
             mappedBy = "carOwner",

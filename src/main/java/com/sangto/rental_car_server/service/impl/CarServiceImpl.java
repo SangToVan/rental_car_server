@@ -49,6 +49,17 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    public Response<List<CarResponseDTO>> getAllCars() {
+        List<Car> cars = carRepo.getAllCars();
+        List<CarResponseDTO> li = cars.stream().map(carMapper::toCarResponseDTO).toList();
+
+        return Response.successfulResponse(
+                "Get list car successfully",
+                li
+        );
+    }
+
+    @Override
     public Response<CarDetailResponseDTO> getCarDetail(Integer carId) {
         Optional<Car> findCar = carRepo.findById(carId);
         if (findCar.isEmpty()) throw new AppException("This car is not existed");

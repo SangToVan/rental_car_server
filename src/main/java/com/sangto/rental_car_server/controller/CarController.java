@@ -29,6 +29,11 @@ public class CarController {
     private final JwtTokenUtil jwtTokenUtil;
     private final CarService carService;
 
+    @GetMapping(Endpoint.V1.Car.BASE)
+    public ResponseEntity<Response<List<CarResponseDTO>>> getAllCars() {
+        return ResponseEntity.status(HttpStatus.OK).body(carService.getAllCars());
+    }
+
     @PostMapping(Endpoint.V1.Car.BASE)
     public ResponseEntity<Response<CarDetailResponseDTO>> addCar(
             HttpServletRequest servletRequest, @RequestBody @Valid AddCarRequestDTO requestDTO) {

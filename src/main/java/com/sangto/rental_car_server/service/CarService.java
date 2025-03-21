@@ -11,6 +11,8 @@ public interface CarService {
 
     Response<List<CarResponseDTO>> getListCarsByOwnerId(Integer ownerId);
 
+    Response<List<CarResponseDTO>> getAllCars();
+
     Response<CarDetailResponseDTO> getCarDetail(Integer carId);
 
     Response<CarDetailResponseForOwnerDTO> getCarDetailForOwner(Integer carId);
@@ -22,4 +24,5 @@ public interface CarService {
     Response<String> verifyCar(Integer carId);
 
     Response<String> changeCarStatus(Integer carId);
+
 }

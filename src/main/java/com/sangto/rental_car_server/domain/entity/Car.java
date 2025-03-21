@@ -8,6 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "cars")
 @Data
@@ -28,6 +31,8 @@ public class Car {
     private Integer numberOfSeats;
     private Integer productionYear;
 
+    private Double basePrice;
+
     @Enumerated(EnumType.STRING)
     private ECarStatus carStatus;
 
@@ -35,4 +40,13 @@ public class Car {
     @ManyToOne(targetEntity = User.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "car_owner_id", referencedColumnName = "user_id")
     private User carOwner;
+
+    @JsonIgnore
+    @OneToMany(
+            mappedBy = "car",
+            targetEntity = Booking.class,
+            cascade = CascadeType.ALL,
+            fetch = FetchType.EAGER,
+            orphanRemoval = true)
+    private List<Booking> booking = new ArrayList<>();
 }
