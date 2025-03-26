@@ -72,7 +72,6 @@ public class BookingMapperImpl implements BookingMapper {
                 .endDateTime(TimeUtil.convertToDateTime(requestDTO.endDateTime()))
                 .paymentMethod(requestDTO.paymentMethod())
                 .status(EBookingStatus.PENDING)
-                .user(requestDTO.customer())
                 .build();
     }
 }

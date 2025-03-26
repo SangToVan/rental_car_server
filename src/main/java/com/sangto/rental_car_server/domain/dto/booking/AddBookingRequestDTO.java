@@ -4,14 +4,13 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.annotation.AfterNowTime;
 import com.sangto.rental_car_server.annotation.RentalTimeMatching;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
-import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
 import jakarta.validation.constraints.NotBlank;
 
 @RentalTimeMatching(startTime = "startDateTime", endTime = "endDateTime")
 public record AddBookingRequestDTO(
         Integer carId,
-        User customer,
+        Integer customerId,
         EPaymentMethod paymentMethod,
         @NotBlank(message = "The start rental time is not blank")
         @AfterNowTime(message = "The start rental time is after now")
