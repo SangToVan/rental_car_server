@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
@@ -10,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,12 +28,15 @@ public class Booking {
     private int id;
 
     @DateTimeFormat(pattern = TimeFormatConstant.DATETIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATETIME_FORMAT)
     private LocalDateTime startDateTime;
 
     @DateTimeFormat(pattern = TimeFormatConstant.DATETIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATETIME_FORMAT)
     private LocalDateTime endDateTime;
 
-    private Double totalPrice;
+    @Column(nullable = false)
+    private BigDecimal totalPrice;
 
     private Long numberOfHours;
 

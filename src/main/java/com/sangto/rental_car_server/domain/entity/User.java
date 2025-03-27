@@ -1,6 +1,8 @@
 package com.sangto.rental_car_server.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -9,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Entity
@@ -32,9 +35,9 @@ public class User implements UserDetails {
     private EUserRole role;
 
     @Column(name = "birthday")
-    @Temporal(TemporalType.DATE)
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    private Date birthday;
+    @DateTimeFormat(pattern = TimeFormatConstant.DATE_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATE_FORMAT)
+    private LocalDate birthday;
 
     private String citizenId;
     private String phoneNumber;

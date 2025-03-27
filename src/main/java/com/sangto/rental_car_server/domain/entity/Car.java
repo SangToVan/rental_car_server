@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +32,8 @@ public class Car {
     private Integer numberOfSeats;
     private Integer productionYear;
 
-    private Double basePrice;
+    @Column(nullable = false)
+    private BigDecimal basePrice;
 
     @Enumerated(EnumType.STRING)
     private ECarStatus carStatus;
