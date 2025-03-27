@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.domain.entity;
 
+import com.sangto.rental_car_server.domain.enums.EWalletType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,17 +12,20 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
-@Table(name = "wallets")
+@Table(name = "system_wallets")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Wallet {
+public class SystemWallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "wallet_id")
+    @Column(name = "system_wallet_id")
     private Integer id;
+
+    @Enumerated(EnumType.STRING)
+    private EWalletType walletType;
 
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
