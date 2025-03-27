@@ -2,6 +2,7 @@ package com.sangto.rental_car_server.domain.mapper.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.RegisterUserResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
+import com.sangto.rental_car_server.domain.entity.Wallet;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
@@ -39,6 +40,7 @@ public class UserMapperImpl implements UserMapper {
                 .phoneNumber(entity.getPhoneNumber())
                 .address(entity.getAddress())
                 .isActive(entity.isActive())
+                .balance(entity.getWallet().getBalance().toString())
                 .role(entity.getRole())
                 .build();
     }
@@ -64,6 +66,7 @@ public class UserMapperImpl implements UserMapper {
                 .phoneNumber(null)
                 .address(null)
                 .isActive(true)
+                .wallet(new Wallet())
                 .role(EUserRole.CUSTOMER)
                 .build();
     }

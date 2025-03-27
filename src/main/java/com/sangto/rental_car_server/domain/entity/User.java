@@ -42,6 +42,10 @@ public class User implements UserDetails {
 
     private boolean isActive;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "wallet_id", nullable = false)
+    private Wallet wallet;
+
     @JsonIgnore
     @OneToMany(
             mappedBy = "user",

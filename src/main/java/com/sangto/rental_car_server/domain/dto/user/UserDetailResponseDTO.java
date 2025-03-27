@@ -18,6 +18,7 @@ public record UserDetailResponseDTO(
         String phoneNumber,
         String address,
         boolean isActive,
+        String balance,
         EUserRole role
 ) {
 }
