@@ -1,7 +1,6 @@
 package com.sangto.rental_car_server.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.sangto.rental_car_server.domain.enums.EWalletType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +10,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Table(name = "system_wallets")
@@ -26,11 +24,17 @@ public class SystemWallet {
     @Column(name = "system_wallet_id")
     private Integer id;
 
-    @Enumerated(EnumType.STRING)
-    private EWalletType walletType;
+    private BigDecimal serviceFee = BigDecimal.ZERO;
+    private BigDecimal rentalFee = BigDecimal.ZERO;
+    private BigDecimal reserve = BigDecimal.ZERO;
 
-    @Column(nullable = false)
-    private BigDecimal balance = BigDecimal.ZERO;
+    public BigDecimal getTotalBalance() {
+        return serviceFee.add(rentalFee).add(reserve);
+    }
+
+    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
+    private LocalDateTime createdAt;
 
     @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")

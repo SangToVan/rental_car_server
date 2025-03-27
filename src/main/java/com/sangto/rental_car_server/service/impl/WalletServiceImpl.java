@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -36,7 +37,7 @@ public class WalletServiceImpl implements WalletService {
         User user = findUser.get();
         Wallet wallet = user.getWallet();
         wallet.setBalance(wallet.getBalance().add(amount));
-        wallet.setUpdated_at(new Date());
+        wallet.setUpdatedAt(LocalDateTime.now());
 
         userRepo.save(user);
     }

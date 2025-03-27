@@ -5,11 +5,12 @@ import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public record UpdUserRequestDTO(
         String username,
-        @Temporal(TemporalType.DATE) @DateTimeFormat(pattern = "yyyy/MM/dd") Date birthday,
+        @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate birthday,
         String citizenId,
         @Pattern(regexp = "^0[0-9]{7,}$", message = "Phone number must start with 0 and contain at least 8 digits")
         String phoneNumber,

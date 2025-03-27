@@ -13,6 +13,7 @@ import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Component
@@ -61,7 +62,7 @@ public class UserMapperImpl implements UserMapper {
         return User.builder()
                 .username(requestDTO.username())
                 .email(requestDTO.email())
-                .birthday(new Date())
+                .birthday(LocalDate.now())
                 .citizenId(null)
                 .phoneNumber(null)
                 .address(null)

@@ -6,6 +6,7 @@ import jakarta.persistence.TemporalType;
 import lombok.Builder;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Builder
@@ -13,7 +14,7 @@ public record UserDetailResponseDTO(
         Integer userId,
         String username,
         String email,
-        @Temporal(TemporalType.DATE) @DateTimeFormat(pattern = "yyyy/MM/dd") Date birthday,
+        @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate birthday,
         String citizenId,
         String phoneNumber,
         String address,
