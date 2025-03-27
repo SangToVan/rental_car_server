@@ -32,5 +32,4 @@ public interface BookingService {
 
     Response<String> cancelBooking(Integer bookingId, Integer userId);
 
-
 }

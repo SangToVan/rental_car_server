@@ -188,6 +188,37 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Response<String> cancelBooking(Integer bookingId, Integer userId) {
-        return null;
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        Booking booking = findBooking.get();
+        if (booking.getUser().getId() == userId) {
+            if (booking.getStatus() == EBookingStatus.PENDING) {
+                booking.setStatus(EBookingStatus.CANCELLED);
+                bookingRepo.save(booking);
+                return Response.successfulResponse(
+                        "Confirm cancelled successfully"
+                );
+            } else if (booking.getStatus() == EBookingStatus.CONFIRMED) {
+                booking.setStatus(EBookingStatus.CANCELLED);
+                bookingRepo.save(booking);
+                return Response.successfulResponse(
+                        "Confirm cancelled successfully"
+                );
+            } else {
+                throw new AppException("Cannot cancel pickup");
+            }
+        } else if (booking.getCar().getCarOwner().getId() == userId) {
+            if (booking.getStatus() == EBookingStatus.PENDING) {
+                booking.setStatus(EBookingStatus.CANCELLED);
+                bookingRepo.save(booking);
+                return Response.successfulResponse(
+                        "Confirm cancelled successfully"
+                );
+            } else {
+                throw new AppException("Cannot cancel return");
+            }
+        } else {
+            throw new AppException("Cannot cancel return");
+        }
     }
 }

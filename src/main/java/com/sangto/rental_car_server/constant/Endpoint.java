@@ -33,5 +33,16 @@ public class Endpoint {
             public static final String DETAILS_FOR_OWNER = BASE + "/own/{id}";
             public static final String STATUS = BASE + "/{id}/status";
         }
+
+        public static final class Booking {
+            public static final String BASE = PREFIX + "/bookings";
+            public static final String LIST_FOR_USER = BASE + "/own";
+            public static final String DETAILS = BASE + "/{id}";
+            public static final String CONFIRM_BOOKING = BASE + "/{id}/confirm-booking";
+            public static final String CONFIRM_PICK_UP = BASE + "/{id}/confirm-pickup";
+            public static final String CONFIRM_RETURN = BASE + "/{id}/confirm-return";
+            public static final String CANCELLED_BOOKING = BASE + "/{id}/cancel";
+            public static final String FEEDBACK = BASE + "/{id}/feedback";
+        }
     }
 }
