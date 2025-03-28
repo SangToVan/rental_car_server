@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "system_wallets")
@@ -39,4 +40,12 @@ public class SystemWallet {
     @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    @OneToMany(
+            mappedBy = "systemWallet",
+            targetEntity = WalletTransaction.class,
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true)
+    private List<WalletTransaction> transactions;
 }

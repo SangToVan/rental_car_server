@@ -6,6 +6,8 @@ import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
 import lombok.Builder;
 
+import java.math.BigDecimal;
+
 @Builder
 public record BookingDetailResponseDTO(
         Integer bookingId,
@@ -15,7 +17,7 @@ public record BookingDetailResponseDTO(
         String endDateTime,
         EPaymentMethod paymentMethod,
         EBookingStatus status,
-        Double totalPrice,
+        BigDecimal totalPrice,
         Long numberOfHour
 ) {
 }
