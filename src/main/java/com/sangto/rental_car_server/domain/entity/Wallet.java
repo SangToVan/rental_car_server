@@ -1,6 +1,7 @@
 package com.sangto.rental_car_server.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,10 +29,15 @@ public class Wallet {
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 
+    @JsonIgnore
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "wallet")
+    private User user;
+
     @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
+    @JsonIgnore
     @OneToMany(
             mappedBy = "wallet",
             targetEntity = WalletTransaction.class,

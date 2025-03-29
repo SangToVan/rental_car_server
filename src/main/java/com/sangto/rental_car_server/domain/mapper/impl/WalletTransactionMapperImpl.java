@@ -16,7 +16,7 @@ public class WalletTransactionMapperImpl implements WalletTransactionMapper {
                 .amount(entity.getAmount().toString())
                 .transactionType(entity.getTransactionType())
                 .description(entity.getDescription())
-                .createdAt(entity.getCreatedAt())
+                .createdAt(entity.getTransactionDate())
                 .build();
     }
 
