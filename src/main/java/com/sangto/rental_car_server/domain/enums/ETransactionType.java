@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum ETransactionType {
     DEPOSIT("Deposit"),
-    WITHDRAWAL("Withdrawal"),
+    TOP_UP("Top up"),
+    WITHDRAW("Withdraw"),
+    PAYMENT("Payment"),
     TRANSFER("Transfer"),
     REFUND("Refund");
 

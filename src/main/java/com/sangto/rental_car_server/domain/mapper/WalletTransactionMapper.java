@@ -2,10 +2,10 @@ package com.sangto.rental_car_server.domain.mapper;
 
 import com.sangto.rental_car_server.domain.dto.wallet_transaction.WalletTransactionRequestDTO;
 import com.sangto.rental_car_server.domain.dto.wallet_transaction.WalletTransactionResponseDTO;
-import com.sangto.rental_car_server.domain.entity.WalletTransaction;
+import com.sangto.rental_car_server.domain.entity.Transaction;
 
 public interface WalletTransactionMapper {
-    WalletTransactionResponseDTO toWalletTransactionResponseDto(WalletTransaction entity);
+    WalletTransactionResponseDTO toWalletTransactionResponseDto(Transaction entity);
 
-    WalletTransaction toWalletTransaction(WalletTransactionRequestDTO requestDTO);
+    Transaction toWalletTransaction(WalletTransactionRequestDTO requestDTO);
 }
