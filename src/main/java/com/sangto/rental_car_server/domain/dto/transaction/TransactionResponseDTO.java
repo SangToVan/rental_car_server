@@ -1,15 +1,16 @@
-package com.sangto.rental_car_server.domain.dto.wallet_transaction;
+package com.sangto.rental_car_server.domain.dto.transaction;
 
 import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import lombok.Builder;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
-public record WalletTransactionRequestDTO(
-        BigDecimal amount,
+public record TransactionResponseDTO(
         ETransactionType transactionType,
+        String amount,
         String description,
-        LocalDateTime createdAt) {
+        Integer walletId,
+        LocalDateTime transactionDate
+) {
 }
