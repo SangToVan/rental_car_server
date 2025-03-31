@@ -58,6 +58,9 @@ public class User implements UserDetails {
             orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", targetEntity = Payment.class, fetch = FetchType.LAZY)
+    private List<Payment> payments = new ArrayList<>();
+
     @OneToMany(
             mappedBy = "carOwner",
             targetEntity = Car.class,

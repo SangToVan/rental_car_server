@@ -1,8 +1,6 @@
 package com.sangto.rental_car_server.service;
 
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
-import com.sangto.rental_car_server.domain.entity.Wallet;
-import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import com.sangto.rental_car_server.responses.Response;
 
 import java.math.BigDecimal;
