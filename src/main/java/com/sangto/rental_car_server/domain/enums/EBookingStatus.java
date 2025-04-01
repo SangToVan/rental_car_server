@@ -7,10 +7,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum EBookingStatus {
     PENDING("Pending"),
+    PAID("Paid"),
     CONFIRMED("Confirmed"),
     CANCELLED("Cancelled"),
-    PICK_UP("Pick up"),
     IN_PROGRESS("In Progress"),
+    RETURNED("Returned"),
     COMPLETED("Completed");
 
     private final String title;

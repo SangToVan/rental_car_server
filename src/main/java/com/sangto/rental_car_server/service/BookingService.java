@@ -24,6 +24,8 @@ public interface BookingService {
 
     Response<BookingDetailResponseDTO> addBooking(Integer userId, AddBookingRequestDTO requestDTO);
 
+    Response<String> paymentBooking(Integer userId, Integer bookingId);
+
     Response<String> confirmBooking(Integer bookingId, Integer userId);
 
     Response<String> confirmPickup(Integer bookingId, Integer userId);

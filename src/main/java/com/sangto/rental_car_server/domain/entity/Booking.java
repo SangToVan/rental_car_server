@@ -4,11 +4,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
+import com.sangto.rental_car_server.utility.RentalCalculateUtil;
+import com.sangto.rental_car_server.utility.TimeUtil;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
@@ -38,7 +37,21 @@ public class Booking {
     @Column(nullable = false)
     private BigDecimal totalPrice;
 
+    @Transient
+    @Setter(AccessLevel.NONE)
+    private BigDecimal rentalFee;
+
+    public BigDecimal getRentalFee() {
+        return RentalCalculateUtil.calculateRentalFee(this.startDateTime, this.endDateTime, this.car.getBasePrice());
+    }
+
+    @Transient
+    @Setter(AccessLevel.NONE)
     private Long numberOfHours;
+
+    public Long getNumberOfHours() {
+        return RentalCalculateUtil.calculateHour(this.startDateTime, this.endDateTime);
+    }
 
     @Enumerated(EnumType.STRING)
     private EPaymentMethod paymentMethod;

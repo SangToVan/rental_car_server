@@ -18,12 +18,17 @@ import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
+import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -114,30 +119,38 @@ public class BookingServiceImpl implements BookingService {
             throw new AppException("This car is suspended");
         }
 
-        // check time rent
+        // Check schedule to rent car
 
         // find customer
         Optional<User> findCustomer = userRepo.findById(userId);
         if (findCustomer.isEmpty()) throw new AppException("This user is not existed");
         User customer = findCustomer.get();
 
+        // Calculate rental duration and rental fee
         // Convert startDateTime and endDateTime from String to Date
-        SimpleDateFormat sdf = new SimpleDateFormat(TimeFormatConstant.DATETIME_FORMAT);
-        Date startDateTime = null;
-        Date endDateTime = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TimeFormatConstant.DATETIME_FORMAT);
+        LocalDateTime startDateTime = null;
+        LocalDateTime endDateTime = null;
         try {
-            startDateTime = sdf.parse(requestDTO.startDateTime());
-            endDateTime = sdf.parse(requestDTO.endDateTime());
-        } catch (ParseException e) {
-            throw new AppException("Invalid date format", e);
+            startDateTime = LocalDateTime.parse(requestDTO.startDateTime(), formatter);
+            endDateTime = LocalDateTime.parse(requestDTO.endDateTime(), formatter);
+        } catch (DateTimeParseException e) {
+            throw new AppException("Invalid date format ", e);
+        } catch (NullPointerException ex) {
+            throw new AppException("Date time not null ", ex);
         }
 
-        // Calculate rental duration and rental fee
+        // check time rent
+        Long rentalDurationHours = RentalCalculateUtil.calculateHour(startDateTime, endDateTime);
+        if (rentalDurationHours <= 0) throw new AppException("Rental duration less than 0");
 
+        // calculate rental cost
+        BigDecimal totalRentalCost = RentalCalculateUtil.calculateRentalFee(startDateTime, endDateTime, car.getBasePrice());
         // Booking
         Booking newBooking = bookingMapper.addBookingRequestDTOtoEntity(requestDTO);
         newBooking.setCar(car);
         newBooking.setUser(customer);
+        newBooking.setTotalPrice(totalRentalCost);
         return Response.successfulResponse(
                 "Add new booking successfully",
                 bookingMapper.toBookingDetailResponseDTO(newBooking)
@@ -145,9 +158,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public Response<String> paymentBooking(Integer userId, Integer bookingId) {
+        return null;
+    }
+
+    @Override
     public Response<String> confirmBooking(Integer bookingId, Integer userId) {
         Booking booking = this.verifyBookingCarOwner(userId, bookingId);
-        if (booking.getStatus() == EBookingStatus.PENDING) {
+        if (booking.getStatus() == EBookingStatus.PAID) {
             booking.setStatus(EBookingStatus.CONFIRMED);
             bookingRepo.save(booking);
             return Response.successfulResponse(

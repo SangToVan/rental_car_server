@@ -10,6 +10,8 @@ import java.io.IOException;
 
 public interface UserService {
 
+    void initializeAdmin();
+
     Response<UserDetailResponseDTO> getDetailUser(Integer id);
 
     Response<LoginResponseDTO> addUser(AddUserRequestDTO requestDTO) throws IOException;

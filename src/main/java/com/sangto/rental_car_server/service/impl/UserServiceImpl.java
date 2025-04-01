@@ -2,6 +2,7 @@ package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
+import com.sangto.rental_car_server.domain.entity.Wallet;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
@@ -12,21 +13,50 @@ import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.UserService;
 import com.sangto.rental_car_server.utility.JwtTokenUtil;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
     private final UserMapper userMapper;
     private final JwtTokenUtil jwtTokenUtil;
+
+    @PostConstruct
+    public void init() {
+        initializeAdmin();
+    }
+
+    @Override
+    public void initializeAdmin() {
+        List<User> users = userRepo.findByRole(EUserRole.ADMIN);
+        if (users.isEmpty()) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setEmail("admin@gmail.com");
+            PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole(EUserRole.ADMIN);
+            admin.setActive(true);
+            admin.setWallet(new Wallet());
+            userRepo.save(admin);
+            log.warn("Admin user has been created with default password!");
+        } else {
+            log.warn("Admin user already exists!");
+        }
+        log.info("Admin user has been initialized!");
+    }
 
     @Override
     public Response<UserDetailResponseDTO> getDetailUser(Integer id) {
@@ -39,7 +69,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Response<LoginResponseDTO> addUser(AddUserRequestDTO requestDTO) throws IOException {
         Optional<User> findUser = userRepo.findByEmail(requestDTO.email());
-        if (!findUser.isEmpty()) throw new AppException("Email already existed");
+        if (findUser.isPresent()) throw new AppException("Email already existed");
 
         User newUser = userMapper.addUserRequestDTOtoEntity(requestDTO);
         // Set password

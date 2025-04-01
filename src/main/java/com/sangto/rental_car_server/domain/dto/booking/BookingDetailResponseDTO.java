@@ -18,6 +18,7 @@ public record BookingDetailResponseDTO(
         EPaymentMethod paymentMethod,
         EBookingStatus status,
         BigDecimal totalPrice,
+        BigDecimal rentalFee,
         Long numberOfHour
 ) {
 }

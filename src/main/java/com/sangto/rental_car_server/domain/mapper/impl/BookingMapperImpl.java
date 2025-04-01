@@ -31,6 +31,7 @@ public class BookingMapperImpl implements BookingMapper {
                 .startDateTime(TimeUtil.formatToString(entity.getStartDateTime()))
                 .endDateTime(TimeUtil.formatToString(entity.getEndDateTime()))
                 .totalPrice(entity.getTotalPrice())
+                .rentalFee(entity.getRentalFee())
                 .bookingStatus(entity.getStatus())
                 .build();
     }
@@ -47,6 +48,7 @@ public class BookingMapperImpl implements BookingMapper {
                 .paymentMethod(entity.getPaymentMethod())
                 .status(entity.getStatus())
                 .totalPrice(entity.getTotalPrice())
+                .rentalFee(entity.getRentalFee())
                 .numberOfHour(entity.getNumberOfHours())
                 .build();
     }
