@@ -19,4 +19,6 @@ public interface UserService {
     Response<UserDetailResponseDTO> updateUser(Integer id, UpdUserRequestDTO requestDTO);
 
     Response<UserDetailResponseDTO> changeUserRole(Integer id);
+
+
 }

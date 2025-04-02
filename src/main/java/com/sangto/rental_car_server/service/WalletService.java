@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.service;
 
+import com.sangto.rental_car_server.domain.dto.wallet.UpdWalletDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
 import com.sangto.rental_car_server.responses.Response;
 
@@ -7,11 +8,13 @@ import java.math.BigDecimal;
 
 public interface WalletService {
 
-    Response<WalletResponseDTO> getWalletDetail(Integer walletId);
+    Response<WalletResponseDTO> getWalletDetail(Integer userId);
 
-    Response<String> creditWallet(Integer walletId, BigDecimal amount);
+    Response<WalletResponseDTO> updateWallet(Integer userId, UpdWalletDTO updWalletDTO);
 
-    Response<String> debitWallet(Integer walletId, BigDecimal amount);
+    void creditWallet(Integer walletId, BigDecimal amount);
+
+    void debitWallet(Integer walletId, BigDecimal amount);
 
     Response<String> transferWallet(Integer fromWalletId, Integer toWalletId, BigDecimal amount);
 }

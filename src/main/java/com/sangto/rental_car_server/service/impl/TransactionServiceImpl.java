@@ -50,7 +50,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Transaction addTransaction(AddTransactionRequestDTO requestDTO) {
+    public void addTransaction(AddTransactionRequestDTO requestDTO) {
         Optional<Wallet> findWallet = userRepo.findWalletById(requestDTO.walletId());
         if (findWallet.isEmpty()) throw new AppException("This wallet does not exist");
         Wallet wallet = findWallet.get();
@@ -58,7 +58,6 @@ public class TransactionServiceImpl implements TransactionService {
             Transaction newTransaction = transactionMapper.toTransactionEntity(requestDTO);
             newTransaction.setWallet(wallet);
             transactionRepo.save(newTransaction);
-            return newTransaction;
         } catch (Exception e) {
             throw new AppException("Add new transaction unsuccessfully" + e.getMessage());
         }

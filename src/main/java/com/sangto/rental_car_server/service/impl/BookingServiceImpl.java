@@ -164,7 +164,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Response<String> paymentBooking(Integer userId, Integer bookingId) {
+    public Response<String> paymentBooking(Integer bookingId, Integer userId) {
         Booking booking = this.verifyBookingCustomer(userId, bookingId);
         if (booking.getStatus() == EBookingStatus.PENDING) {
             escrowTransactionService.addEscrowTransaction(AddEscrowTransactionRequestDTO.builder()

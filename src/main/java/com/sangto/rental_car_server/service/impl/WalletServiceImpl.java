@@ -1,9 +1,12 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.domain.dto.wallet.UpdWalletDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Wallet;
+import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import com.sangto.rental_car_server.domain.mapper.WalletMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
+import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.repository.WalletRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.WalletService;
@@ -22,11 +25,12 @@ import java.util.Optional;
 public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepo;
+    private final UserRepository userRepo;
     private final WalletMapper walletMapper;
 
     @Override
-    public Response<WalletResponseDTO> getWalletDetail(Integer walletId) {
-        Optional<Wallet> findWallet = walletRepo.findById(walletId);
+    public Response<WalletResponseDTO> getWalletDetail(Integer userId) {
+        Optional<Wallet> findWallet = userRepo.findWalletById(userId);
         if (findWallet.isEmpty()) throw new AppException("Wallet not found");
         Wallet wallet = findWallet.get();
 
@@ -38,7 +42,26 @@ public class WalletServiceImpl implements WalletService {
 
     @Override
     @Transactional
-    public Response<String> creditWallet(Integer walletId, BigDecimal amount) {
+    public Response<WalletResponseDTO> updateWallet(Integer userId, UpdWalletDTO updWalletDTO) {
+        Optional<Wallet> findWallet = userRepo.findWalletById(userId);
+        if (findWallet.isEmpty()) throw new AppException("Wallet not found");
+        Wallet wallet = findWallet.get();
+
+        if (updWalletDTO.type().equals(ETransactionType.TOP_UP)) {
+            creditWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
+        } else if (updWalletDTO.type().equals(ETransactionType.WITHDRAW)) {
+            debitWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
+        } else throw new AppException("Wrong transaction type");
+
+        return Response.successfulResponse(
+                "Update wallet successfully",
+                walletMapper.toWalletResponseDTO(wallet)
+        );
+    }
+
+    @Override
+    @Transactional
+    public void creditWallet(Integer walletId, BigDecimal amount) {
         Optional<Wallet> findWallet = walletRepo.findById(walletId);
         if (findWallet.isEmpty()) throw new AppException("Wallet not found");
         Wallet wallet = findWallet.get();
@@ -46,12 +69,12 @@ public class WalletServiceImpl implements WalletService {
         wallet.setUpdatedAt(LocalDateTime.now());
         walletRepo.save(wallet);
 
-        return Response.successfulResponse("Credit wallet successfully");
+        Response.successfulResponse("Credit wallet successfully");
     }
 
     @Override
     @Transactional
-    public Response<String> debitWallet(Integer walletId, BigDecimal amount) {
+    public void debitWallet(Integer walletId, BigDecimal amount) {
         Optional<Wallet> findWallet = walletRepo.findById(walletId);
         if (findWallet.isEmpty()) throw new AppException("Wallet not found");
         Wallet wallet = findWallet.get();
@@ -60,7 +83,7 @@ public class WalletServiceImpl implements WalletService {
         wallet.setUpdatedAt(LocalDateTime.now());
         walletRepo.save(wallet);
 
-        return Response.successfulResponse("Debit wallet successfully");
+        Response.successfulResponse("Debit wallet successfully");
     }
 
     @Override

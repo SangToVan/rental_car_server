@@ -24,6 +24,8 @@ public class Endpoint {
             public static final String BASE = PREFIX + "/users";
             public static final String PROFILE = BASE + "/profile";
             public static final String CHANGE_ROLE = BASE + "/change-role";
+            public static final String GET_WALLET = BASE + "/wallet";
+            public static final String UPDATE_WALLET = BASE + "/wallet";
         }
 
         public static final class Car {
@@ -38,11 +40,20 @@ public class Endpoint {
             public static final String BASE = PREFIX + "/bookings";
             public static final String LIST_FOR_USER = BASE + "/own";
             public static final String DETAILS = BASE + "/{id}";
+            public static final String PAYMENT_BOOKING = BASE + "/{id}/payment-booking";
             public static final String CONFIRM_BOOKING = BASE + "/{id}/confirm-booking";
             public static final String CONFIRM_PICK_UP = BASE + "/{id}/confirm-pickup";
             public static final String CONFIRM_RETURN = BASE + "/{id}/confirm-return";
+            public static final String COMPLETE_BOOKING = BASE + "/{id}/complete-booking";
             public static final String CANCELLED_BOOKING = BASE + "/{id}/cancel";
-            public static final String FEEDBACK = BASE + "/{id}/feedback";
+        }
+
+        public static final class Transaction {
+            public static final String BASE = PREFIX + "/transactions";
+        }
+
+        public static final class EscrowTransaction {
+            public static final String BASE = PREFIX + "/escrow-transactions";
         }
     }
 }

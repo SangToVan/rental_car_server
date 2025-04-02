@@ -14,7 +14,6 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,8 +51,15 @@ public class BookingController {
                 .body(bookingService.addBooking(AuthUtil.getRequestedUser().getId(), requestDTO));
     }
 
+    @PatchMapping(Endpoint.V1.Booking.PAYMENT_BOOKING)
+    public ResponseEntity<Response<String>> paymentBooking(@PathVariable(name = "id") Integer bookingId)
+            throws MessagingException {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(bookingService.paymentBooking(bookingId, AuthUtil.getRequestedUser().getId()));
+    }
+
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_BOOKING)
-    public ResponseEntity<Response<String>> confirmDeposit(@PathVariable(name = "id") Integer bookingId)
+    public ResponseEntity<Response<String>> confirmBooking(@PathVariable(name = "id") Integer bookingId)
             throws MessagingException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmBooking(bookingId, AuthUtil.getRequestedUser().getId()));
@@ -68,6 +74,12 @@ public class BookingController {
     public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "id") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmReturn(AuthUtil.getRequestedUser().getId(), bookingId));
+    }
+
+    @PatchMapping(Endpoint.V1.Booking.COMPLETE_BOOKING)
+    public ResponseEntity<Response<String>> completeBooking(@PathVariable(name = "id") Integer bookingId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(bookingService.completeBooking(bookingId));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CANCELLED_BOOKING)
