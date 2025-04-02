@@ -32,6 +32,8 @@ public interface BookingService {
 
     Response<String> confirmReturn(Integer bookingId, Integer userId);
 
+    Response<String> completeBooking(Integer bookingId);
+
     Response<String> cancelBooking(Integer bookingId, Integer userId);
 
 }

@@ -10,7 +10,7 @@ public enum ETransactionType {
     TOP_UP("Top up"),
     WITHDRAW("Withdraw"),
     PAYMENT("Payment"),
-    TRANSFER("Transfer"),
+    RELEASE("Release"),
     REFUND("Refund");
 
     private final String title;

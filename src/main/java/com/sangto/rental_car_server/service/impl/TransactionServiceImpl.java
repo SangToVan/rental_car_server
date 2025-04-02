@@ -9,7 +9,6 @@ import com.sangto.rental_car_server.domain.mapper.TransactionMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.TransactionRepository;
 import com.sangto.rental_car_server.repository.UserRepository;
-import com.sangto.rental_car_server.repository.WalletRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.TransactionService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ import java.util.Optional;
 public class TransactionServiceImpl implements TransactionService {
 
     private final UserRepository userRepo;
-    private final WalletRepository walletRepo;
     private final TransactionRepository transactionRepo;
     private final TransactionMapper transactionMapper;
 

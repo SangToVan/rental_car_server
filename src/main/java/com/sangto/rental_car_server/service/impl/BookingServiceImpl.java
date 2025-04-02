@@ -5,11 +5,13 @@ import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
+import com.sangto.rental_car_server.domain.dto.escrow_transaction.AddEscrowTransactionRequestDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.Car;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.ECarStatus;
+import com.sangto.rental_car_server.domain.enums.EscrowStatus;
 import com.sangto.rental_car_server.domain.mapper.BookingMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.BookingRepository;
@@ -18,10 +20,12 @@ import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
+import com.sangto.rental_car_server.service.EscrowTransactionService;
 import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -44,6 +48,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepo;
     private final BookingRepository bookingRepo;
     private final CarService carService;
+    private final EscrowTransactionService escrowTransactionService;
     private final BookingMapper bookingMapper;
 
     @Override
@@ -158,8 +163,23 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public Response<String> paymentBooking(Integer userId, Integer bookingId) {
-        return null;
+        Booking booking = this.verifyBookingCustomer(userId, bookingId);
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            escrowTransactionService.addEscrowTransaction(AddEscrowTransactionRequestDTO.builder()
+                            .bookingId(booking.getId())
+                            .amount(booking.getTotalPrice())
+                            .status(EscrowStatus.PENDING)
+                    .build());
+            booking.setStatus(EBookingStatus.PAID);
+            bookingRepo.save(booking);
+            return Response.successfulResponse(
+                    "Payment booking successfully"
+            );
+        } else {
+            throw new AppException("Cannot payment booking");
+        }
     }
 
     @Override
@@ -194,7 +214,7 @@ public class BookingServiceImpl implements BookingService {
     public Response<String> confirmReturn(Integer bookingId, Integer userId) {
         Booking booking = this.verifyBookingCarOwner(userId, bookingId);
         if (booking.getStatus() == EBookingStatus.IN_PROGRESS) {
-            booking.setStatus(EBookingStatus.COMPLETED);
+            booking.setStatus(EBookingStatus.RETURNED);
             bookingRepo.save(booking);
             return Response.successfulResponse(
                     "Confirm return successfully"
@@ -205,18 +225,41 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
+    public Response<String> completeBooking(Integer bookingId) {
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        Booking booking = findBooking.get();
+        if (booking.getStatus() == EBookingStatus.RETURNED) {
+            escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.RELEASED);
+            booking.setStatus(EBookingStatus.COMPLETED);
+            bookingRepo.save(booking);
+            return Response.successfulResponse(
+                    "Complete booking successfully"
+            );
+        } else {
+            throw new AppException("Cannot complete booking");
+        }
+    }
+
+    @Override
+    @Transactional
     public Response<String> cancelBooking(Integer bookingId, Integer userId) {
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
         Booking booking = findBooking.get();
+        // customer cancelled booking
         if (booking.getUser().getId() == userId) {
+            // booking is pending
             if (booking.getStatus() == EBookingStatus.PENDING) {
                 booking.setStatus(EBookingStatus.CANCELLED);
                 bookingRepo.save(booking);
                 return Response.successfulResponse(
                         "Confirm cancelled successfully"
                 );
-            } else if (booking.getStatus() == EBookingStatus.CONFIRMED) {
+            // booking is paid or confirmed
+            } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+                escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.REFUNDED);
                 booking.setStatus(EBookingStatus.CANCELLED);
                 bookingRepo.save(booking);
                 return Response.successfulResponse(
@@ -225,15 +268,18 @@ public class BookingServiceImpl implements BookingService {
             } else {
                 throw new AppException("Cannot cancel pickup");
             }
+        // owner cancelled booking
         } else if (booking.getCar().getCarOwner().getId() == userId) {
-            if (booking.getStatus() == EBookingStatus.PENDING) {
+            if (booking.getStatus() == EBookingStatus.PAID) {
+                escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.REFUNDED);
                 booking.setStatus(EBookingStatus.CANCELLED);
                 bookingRepo.save(booking);
                 return Response.successfulResponse(
                         "Confirm cancelled successfully"
                 );
+            // booking is confirmed
             } else {
-                throw new AppException("Cannot cancel return");
+                throw new AppException("Cannot cancel booking");
             }
         } else {
             throw new AppException("Cannot cancel return");
