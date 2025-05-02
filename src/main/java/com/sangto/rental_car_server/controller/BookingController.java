@@ -73,7 +73,7 @@ public class BookingController {
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_RETURN)
     public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "id") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(bookingService.confirmReturn(AuthUtil.getRequestedUser().getId(), bookingId));
+                .body(bookingService.confirmReturn(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.COMPLETE_BOOKING)

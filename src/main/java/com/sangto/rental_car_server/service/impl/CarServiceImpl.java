@@ -13,6 +13,7 @@ import com.sangto.rental_car_server.service.CarService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -85,14 +86,10 @@ public class CarServiceImpl implements CarService {
         Car newCar = carMapper.addCarRequestDTOtoEntity(requestDTO);
         newCar.setCarOwner(findUser.get());
 
-        try {
-            Car savedCar = carRepo.save(newCar);
-            return Response.successfulResponse(
-                    "Add car successfully", carMapper.toCarDetailResponseDTO(savedCar)
-            );
-        } catch (AppException e) {
-            throw new AppException("Add car failed: ", e);
-        }
+        Car savedCar = carRepo.save(newCar);
+        return Response.successfulResponse(
+                "Add car successfully", carMapper.toCarDetailResponseDTO(savedCar)
+        );
     }
 
     @Override
@@ -113,12 +110,12 @@ public class CarServiceImpl implements CarService {
         Car car = findCar.get();
 
         if (car.getCarStatus() == ECarStatus.UNVERIFIED) {
-            car.setCarStatus(ECarStatus.VERIFIED);
+            car.setCarStatus(ECarStatus.ACTIVE);
         } else {
             car.setCarStatus(ECarStatus.UNVERIFIED);
         }
         carRepo.save(car);
-        String message = car.getCarStatus() == ECarStatus.VERIFIED
+        String message = car.getCarStatus() == ECarStatus.ACTIVE
                 ? "Car with ID " + carId + " has been verified"
                 : "Car with ID " + carId + " has been unverified";
         return Response.successfulResponse(message);

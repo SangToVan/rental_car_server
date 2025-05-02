@@ -24,8 +24,8 @@ public class EscrowTransactionMapperImpl implements EscrowTransactionMapper {
                 .bookingId(entity.getBookingId())
                 .amount(entity.getAmount().toString())
                 .status(entity.getStatus())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .createdAt(entity.getCreatedAt().toString())
+                .updatedAt(entity.getUpdatedAt().toString())
                 .build();
     }
 }

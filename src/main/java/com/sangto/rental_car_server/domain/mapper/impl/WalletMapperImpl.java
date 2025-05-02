@@ -18,7 +18,7 @@ public class WalletMapperImpl implements WalletMapper {
         return WalletResponseDTO.builder()
                 .info(userMapper.toUserResponseDTO(wallet.getUser()))
                 .balance(wallet.getBalance().toString())
-                .updatedAt(wallet.getUpdatedAt())
+                .updatedAt(wallet.getUpdatedAt().toString())
                 .build();
     }
 }

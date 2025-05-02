@@ -26,8 +26,8 @@ public class PaymentMapperImpl implements PaymentMapper {
                 .amount(entity.getAmount().toString())
                 .paymentMethod(entity.getPaymentMethod())
                 .paymentStatus(entity.getPaymentStatus())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .createdAt(entity.getCreatedAt().toString())
+                .updatedAt(entity.getUpdatedAt().toString())
                 .bookingId(entity.getBookingId())
                 .build();
     }

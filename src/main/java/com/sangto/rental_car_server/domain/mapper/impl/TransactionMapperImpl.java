@@ -29,7 +29,7 @@ public class TransactionMapperImpl implements TransactionMapper {
                 .amount(entity.getAmount().toString())
                 .description(entity.getDescription())
                 .walletId(entity.getWallet().getId())
-                .transactionDate(entity.getTransactionDate())
+                .transactionDate(entity.getTransactionDate().toString())
                 .build();
     }
 }

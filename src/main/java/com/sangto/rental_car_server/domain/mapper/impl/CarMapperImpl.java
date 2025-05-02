@@ -9,6 +9,8 @@ import com.sangto.rental_car_server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 @RequiredArgsConstructor
 public class CarMapperImpl implements CarMapper {
@@ -44,6 +46,7 @@ public class CarMapperImpl implements CarMapper {
                 .model(entity.getModel())
                 .numberOfSeats(entity.getNumberOfSeats())
                 .productionYear(entity.getProductionYear())
+                .basePrice(entity.getBasePrice().toString())
                 .carStatus(entity.getCarStatus())
                 .build();
     }
@@ -60,6 +63,7 @@ public class CarMapperImpl implements CarMapper {
                 .model(entity.getModel())
                 .numberOfSeats(entity.getNumberOfSeats())
                 .productionYear(entity.getProductionYear())
+                .basePrice(entity.getBasePrice().toString())
                 .carStatus(entity.getCarStatus())
                 .owner(userMapper.toUserDetailResponseDTO(entity.getCarOwner()))
                 .build();
@@ -76,6 +80,7 @@ public class CarMapperImpl implements CarMapper {
                 .model(requestDTO.model())
                 .numberOfSeats(requestDTO.numberOfSeats())
                 .productionYear(requestDTO.productionYear())
+                .basePrice(new BigDecimal(requestDTO.basePrice()))
                 .carStatus(ECarStatus.UNVERIFIED)
                 .build();
     }
@@ -90,6 +95,7 @@ public class CarMapperImpl implements CarMapper {
         oldCar.setModel(requestDTO.model());
         oldCar.setNumberOfSeats(requestDTO.numberOfSeats());
         oldCar.setProductionYear(requestDTO.productionYear());
+        oldCar.setBasePrice(new BigDecimal(requestDTO.basePrice()));
 
         return oldCar;
     }

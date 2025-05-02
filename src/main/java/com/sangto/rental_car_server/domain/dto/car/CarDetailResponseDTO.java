@@ -13,6 +13,7 @@ public record CarDetailResponseDTO(
         String model,
         Integer numberOfSeats,
         Integer productionYear,
+        String basePrice,
         ECarStatus carStatus
 ) {
 }

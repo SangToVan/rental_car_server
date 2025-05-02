@@ -8,6 +8,7 @@ public record UserResponseDTO(
         Integer userId,
         String username,
         String email,
+        String balance,
         boolean isActive,
         EUserRole role
 ) {

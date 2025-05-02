@@ -4,9 +4,11 @@ import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
+import com.sangto.rental_car_server.domain.dto.user.UserResponseDTO;
 import com.sangto.rental_car_server.responses.Response;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface UserService {
 
@@ -20,5 +22,5 @@ public interface UserService {
 
     Response<UserDetailResponseDTO> changeUserRole(Integer id);
 
-
+    Response<List<UserResponseDTO>> getAllUsers();
 }

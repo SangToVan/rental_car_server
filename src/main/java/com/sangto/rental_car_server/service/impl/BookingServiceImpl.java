@@ -90,7 +90,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId) {
+    public Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId, Integer ownerId) {
+        carService.verifyCarOwner(ownerId, carId);
+
         List<Booking> bookings = bookingRepo.getListBookingByCarId(carId);
         List<BookingResponseForOwnerDTO> li = bookings.stream()
                 .map(bookingMapper::toBookingResponseForOwnerDTO).toList();
@@ -156,6 +158,7 @@ public class BookingServiceImpl implements BookingService {
         newBooking.setCar(car);
         newBooking.setUser(customer);
         newBooking.setTotalPrice(totalRentalCost);
+        bookingRepo.save(newBooking);
         return Response.successfulResponse(
                 "Add new booking successfully",
                 bookingMapper.toBookingDetailResponseDTO(newBooking)

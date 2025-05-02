@@ -14,7 +14,7 @@ public record UserDetailResponseDTO(
         Integer userId,
         String username,
         String email,
-        @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate birthday,
+        String birthday,
         String citizenId,
         String phoneNumber,
         String address,

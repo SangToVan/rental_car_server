@@ -10,7 +10,7 @@ public record EscrowTransactionResponseDTO(
         Integer bookingId,
         String amount,
         EscrowStatus status,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        String createdAt,
+        String updatedAt
 ) {
 }

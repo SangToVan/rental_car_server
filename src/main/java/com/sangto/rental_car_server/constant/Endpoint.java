@@ -7,10 +7,16 @@ public class Endpoint {
         public static final class Admin {
             public static final String BASE = PREFIX + "/admin";
             public static final String CAR = BASE + "/cars";
-            public static final String DETAIL_CAR = CAR + "/{id}";
-            public static final String ADD_CAR = CAR;
-            public static final String UPDATE_CAR = CAR + "/{id}";
-            public static final String VERIFY_CAR = CAR + "/{id}/verify";
+            public static final String DETAIL_CAR = BASE + "/cars/{id}";
+            public static final String ADD_CAR = BASE + "/cars";
+            public static final String UPDATE_CAR = BASE + "/cars/{id}";
+            public static final String VERIFY_CAR = BASE + "/cars/{id}/verify";
+            public static final String USER = BASE + "/users";
+            public static final String ADD_USER = BASE + "/users";
+            public static final String DETAIL_USER = BASE + "/users/{id}";
+            public static final String BOOKING = BASE + "/bookings";
+            public static final String DETAIL_BOOKING = BASE + "/bookings/{id}";
+            public static final String GET_WALLET = BASE + "/wallet";
         }
 
         public static final class Auth {
@@ -34,6 +40,7 @@ public class Endpoint {
             public static final String DETAILS = BASE + "/{id}";
             public static final String DETAILS_FOR_OWNER = BASE + "/own/{id}";
             public static final String STATUS = BASE + "/{id}/status";
+            public static final String LIST_CAR_BOOKINGS = BASE + "/own/{id}/bookings";
         }
 
         public static final class Booking {

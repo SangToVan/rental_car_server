@@ -40,6 +40,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
         if (this.isByPassRequest(request)) {
             filterChain.doFilter(request, response);
+            return;
         }
         final String jwt = authHeader.substring(BEARER_TOKEN.length());
         if (SecurityContextHolder.getContext().getAuthentication() == null && jwtTokenUtil.validateToken(jwt)) {

@@ -11,6 +11,6 @@ public record TransactionResponseDTO(
         String amount,
         String description,
         Integer walletId,
-        LocalDateTime transactionDate
+        String transactionDate
 ) {
 }

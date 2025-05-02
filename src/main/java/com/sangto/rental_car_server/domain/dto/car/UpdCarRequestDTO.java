@@ -9,6 +9,7 @@ public record UpdCarRequestDTO(
         String color,
         String model,
         Integer numberOfSeats,
-        Integer productionYear
+        Integer productionYear,
+        String basePrice
 ) {
 }

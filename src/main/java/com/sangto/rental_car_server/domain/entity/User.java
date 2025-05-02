@@ -37,11 +37,22 @@ public class User implements UserDetails {
     @Column(name = "birthday")
     @DateTimeFormat(pattern = TimeFormatConstant.DATE_FORMAT)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATE_FORMAT)
-    private LocalDate birthday;
+    private LocalDate birthday = LocalDate.now();
 
     private String citizenId;
     private String phoneNumber;
     private String address;
+    private String drivingLicense;
+    private String avatar;
+    private String avatarPublicId;
+
+    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    private LocalDate createdAt = LocalDate.now();
+
+    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    private LocalDate updatedAt = LocalDate.now();
 
     private boolean isActive;
 

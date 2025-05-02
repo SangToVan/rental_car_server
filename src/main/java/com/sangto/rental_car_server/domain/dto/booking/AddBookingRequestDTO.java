@@ -10,7 +10,6 @@ import jakarta.validation.constraints.NotBlank;
 @RentalTimeMatching(startTime = "startDateTime", endTime = "endDateTime")
 public record AddBookingRequestDTO(
         Integer carId,
-        Integer customerId,
         EPaymentMethod paymentMethod,
         @NotBlank(message = "The start rental time is not blank")
         @AfterNowTime(message = "The start rental time is after now")

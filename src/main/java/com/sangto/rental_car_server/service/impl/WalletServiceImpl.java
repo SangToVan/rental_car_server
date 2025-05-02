@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.domain.dto.transaction.AddTransactionRequestDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.UpdWalletDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Wallet;
@@ -9,6 +10,7 @@ import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.repository.WalletRepository;
 import com.sangto.rental_car_server.responses.Response;
+import com.sangto.rental_car_server.service.TransactionService;
 import com.sangto.rental_car_server.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class WalletServiceImpl implements WalletService {
 
     private final WalletRepository walletRepo;
     private final UserRepository userRepo;
+    private final TransactionService transactionService;
     private final WalletMapper walletMapper;
 
     @Override
@@ -49,8 +52,20 @@ public class WalletServiceImpl implements WalletService {
 
         if (updWalletDTO.type().equals(ETransactionType.TOP_UP)) {
             creditWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
+            transactionService.addTransaction(AddTransactionRequestDTO.builder()
+                            .transactionType(ETransactionType.TOP_UP)
+                            .amount(updWalletDTO.amount())
+                            .description("Top up transaction")
+                            .walletId(wallet.getId())
+                    .build());
         } else if (updWalletDTO.type().equals(ETransactionType.WITHDRAW)) {
             debitWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
+            transactionService.addTransaction(AddTransactionRequestDTO.builder()
+                    .transactionType(ETransactionType.WITHDRAW)
+                    .amount(updWalletDTO.amount())
+                    .description("Withdraw transaction")
+                    .walletId(wallet.getId())
+                    .build());
         } else throw new AppException("Wrong transaction type");
 
         return Response.successfulResponse(

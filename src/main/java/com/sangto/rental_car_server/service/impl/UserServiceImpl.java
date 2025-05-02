@@ -2,6 +2,7 @@ package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.domain.dto.auth.LoginResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
+import com.sangto.rental_car_server.domain.dto.user.UserResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Wallet;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -124,5 +126,17 @@ public class UserServiceImpl implements UserService {
         } catch (Exception e) {
             throw new AppException("Change user role unsuccessfully");
         }
+    }
+
+    @Override
+    public Response<List<UserResponseDTO>> getAllUsers() {
+
+        List<User> users = userRepo.findAllExcludingRole(EUserRole.ADMIN);
+        if (users.isEmpty()) throw new AppException("No users found");
+        List<UserResponseDTO> li = users.stream().map(userMapper::toUserResponseDTO).toList();
+
+        return Response.successfulResponse(
+                "Get all users successfully", li
+        );
     }
 }

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -27,15 +28,18 @@ public class SecurityConfig {
             "/api-docs" + CATCH_ALL_WILDCARDS,
             "/swagger-ui" + CATCH_ALL_WILDCARDS,
             "/v3/api-docs" + CATCH_ALL_WILDCARDS,
+            Endpoint.V1.Admin.BASE + CATCH_ALL_WILDCARDS,
             Endpoint.V1.Auth.BASE + CATCH_ALL_WILDCARDS,
             Endpoint.V1.Car.BASE,
-            Endpoint.V1.Car.DETAILS
+            Endpoint.V1.Car.DETAILS,
     };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+        httpSecurity
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()

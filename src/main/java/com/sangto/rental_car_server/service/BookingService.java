@@ -18,7 +18,7 @@ public interface BookingService {
 
     Response<List<BookingResponseDTO>> getAllBookingForUser(Integer userId);
 
-    Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId);
+    Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId, Integer ownerId);
 
     Response<BookingDetailResponseDTO> getBookingDetail(Integer bookingId);
 

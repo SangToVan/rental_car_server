@@ -9,6 +9,6 @@ import java.time.LocalDateTime;
 public record WalletResponseDTO(
         UserResponseDTO info,
         String balance,
-        LocalDateTime updatedAt
+        String updatedAt
 ) {
 }

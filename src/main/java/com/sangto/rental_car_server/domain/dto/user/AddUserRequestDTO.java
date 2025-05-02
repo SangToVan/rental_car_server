@@ -12,6 +12,8 @@ public record AddUserRequestDTO(
         String password,
         String confirmPassword,
         String username,
-        String email
+        String email,
+        @Pattern(regexp = "^0[0-9]{7,}$", message = "Phone number must start with 0 and contain at least 8 digits")
+        String phoneNumber
 ) {
 }

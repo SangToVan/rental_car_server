@@ -11,8 +11,8 @@ public record PaymentResponseDTO(
         String amount,
         EPaymentMethod paymentMethod,
         EPaymentStatus paymentStatus,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
+        String createdAt,
+        String updatedAt,
         Integer bookingId
 ) {
 }

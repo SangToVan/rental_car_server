@@ -14,6 +14,7 @@ public record CarDetailResponseForOwnerDTO(
         String model,
         Integer numberOfSeats,
         Integer productionYear,
+        String basePrice,
         ECarStatus carStatus,
         UserDetailResponseDTO owner
 ) {
