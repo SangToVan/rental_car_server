@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
+import com.sangto.rental_car_server.domain.enums.ERelationship;
 import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import com.sangto.rental_car_server.utility.TimeUtil;
 import jakarta.persistence.*;
@@ -58,6 +59,13 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     private EBookingStatus status;
+
+    private String driverName;
+    private String driverPhone;
+    private String driverCitizenId;
+
+    @Enumerated(EnumType.STRING)
+    private ERelationship relationship;
 
     @ManyToOne(targetEntity = Car.class, fetch = FetchType.EAGER)
     @JoinColumn(name = "car_id", referencedColumnName = "car_id")

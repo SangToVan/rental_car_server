@@ -1,15 +1,15 @@
 package com.sangto.rental_car_server.domain.dto.car;
 
-import com.sangto.rental_car_server.domain.enums.ECarStatus;
+import com.sangto.rental_car_server.domain.dto.image.UpdImageRequestDTO;
 
 public record UpdCarRequestDTO(
-        String name,
-        String licensePlate,
-        String brand,
-        String color,
-        String model,
-        Integer numberOfSeats,
-        Integer productionYear,
-        String basePrice
+        Integer mileage,
+        Float fuelConsumption,
+        String address,
+        String description,
+        String additionalFunctions,
+        String termOfUse,
+        String basePrice,
+        UpdImageRequestDTO[] images
 ) {
 }

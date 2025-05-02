@@ -4,9 +4,8 @@ import com.sangto.rental_car_server.domain.dto.car.CarDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
+import com.sangto.rental_car_server.domain.enums.ERelationship;
 import lombok.Builder;
-
-import java.math.BigDecimal;
 
 @Builder
 public record BookingDetailResponseDTO(
@@ -15,10 +14,14 @@ public record BookingDetailResponseDTO(
         UserDetailResponseDTO customerInfo,
         String startDateTime,
         String endDateTime,
+        Long numberOfHour,
+        String totalPrice,
+        String rentalFee,
         EPaymentMethod paymentMethod,
         EBookingStatus status,
-        BigDecimal totalPrice,
-        BigDecimal rentalFee,
-        Long numberOfHour
+        String driverName,
+        String driverPhone,
+        String driverCitizenId,
+        ERelationship relationship
 ) {
 }

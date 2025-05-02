@@ -14,6 +14,8 @@ public record UpdUserRequestDTO(
         String citizenId,
         @Pattern(regexp = "^0[0-9]{7,}$", message = "Phone number must start with 0 and contain at least 8 digits")
         String phoneNumber,
-        String address
+        String address,
+        String drivingLicense,
+        String avatar
 ) {
 }

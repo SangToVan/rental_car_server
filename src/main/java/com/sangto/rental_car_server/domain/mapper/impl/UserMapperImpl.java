@@ -9,18 +9,21 @@ import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserResponseDTO;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
+import com.sangto.rental_car_server.exceptions.AppException;
+import com.sangto.rental_car_server.service.CloudinaryService;
 import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.util.Date;
+import java.io.IOException;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class UserMapperImpl implements UserMapper {
 
     private final JwtTokenUtil jwtTokenUtil;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public RegisterUserResponseDTO toRegisterUserResponseDTO(User entity) {
@@ -33,16 +36,20 @@ public class UserMapperImpl implements UserMapper {
     @Override
     public UserDetailResponseDTO toUserDetailResponseDTO(User entity) {
         return UserDetailResponseDTO.builder()
-                .userId(entity.getId())
+                .id(entity.getId())
                 .username(entity.getUsername())
                 .email(entity.getEmail())
+                .role(entity.getRole())
                 .birthday(entity.getBirthday().toString())
                 .citizenId(entity.getCitizenId())
                 .phoneNumber(entity.getPhoneNumber())
                 .address(entity.getAddress())
+                .drivingLicense(entity.getDrivingLicense())
+                .avatar(entity.getAvatar())
+                .createdAt(entity.getCreatedAt().toString())
+                .updatedAt(entity.getUpdatedAt().toString())
                 .isActive(entity.isActive())
                 .balance(entity.getWallet().getBalance().toString())
-                .role(entity.getRole())
                 .build();
     }
 
@@ -52,9 +59,11 @@ public class UserMapperImpl implements UserMapper {
                 .userId(entity.getId())
                 .username(entity.getUsername())
                 .email(entity.getEmail())
-                .balance(entity.getWallet().getBalance().toString())
-                .isActive(entity.isActive())
                 .role(entity.getRole())
+                .phoneNumber(entity.getPhoneNumber())
+                .avatar(entity.getAvatar())
+                .isActive(entity.isActive())
+                .balance(entity.getWallet().getBalance().toString())
                 .build();
     }
 
@@ -63,13 +72,13 @@ public class UserMapperImpl implements UserMapper {
         return User.builder()
                 .username(requestDTO.username())
                 .email(requestDTO.email())
-                .birthday(LocalDate.now())
+                .role(EUserRole.CUSTOMER)
                 .citizenId(null)
                 .phoneNumber(requestDTO.phoneNumber())
                 .address(null)
+                .drivingLicense(null)
                 .isActive(true)
                 .wallet(new Wallet())
-                .role(EUserRole.CUSTOMER)
                 .build();
     }
 
@@ -80,6 +89,18 @@ public class UserMapperImpl implements UserMapper {
         oldUser.setCitizenId(requestDTO.citizenId());
         oldUser.setPhoneNumber(requestDTO.phoneNumber());
         oldUser.setAddress(requestDTO.address());
+        oldUser.setDrivingLicense(requestDTO.drivingLicense());
+        if (requestDTO.avatar() != null && !requestDTO.avatar().isEmpty()) {
+            try {
+                Map uploadResult = cloudinaryService.uploadFileBase64(requestDTO.avatar(), "avatar");
+                String avatarUrl = (String) uploadResult.get("url");
+                String avatarPublicId = (String) uploadResult.get("public_id");
+                oldUser.setAvatar(avatarUrl);
+                oldUser.setAvatarPublicId(avatarPublicId);
+            } catch (IOException e) {
+                throw new AppException("USER::UPLOAD_FILE_FAILED", e);
+            }
+        }
 
         return oldUser;
     }

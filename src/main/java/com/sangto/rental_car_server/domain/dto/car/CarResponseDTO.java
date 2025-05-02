@@ -1,7 +1,10 @@
 package com.sangto.rental_car_server.domain.dto.car;
 
+import com.sangto.rental_car_server.domain.dto.image.ImageResponseDTO;
 import com.sangto.rental_car_server.domain.enums.ECarStatus;
 import lombok.Builder;
+
+import java.util.List;
 
 @Builder
 public record CarResponseDTO(
@@ -9,10 +12,11 @@ public record CarResponseDTO(
         String name,
         String licensePlate,
         String brand,
-        String color,
         String model,
-        Integer numberOfSeats,
-        Integer productionYear,
-        ECarStatus carStatus
+        String address,
+        String basePrice,
+        ECarStatus carStatus,
+        Double rating,
+        List<ImageResponseDTO> images
 ) {
 }

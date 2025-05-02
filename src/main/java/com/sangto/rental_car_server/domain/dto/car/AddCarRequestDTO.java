@@ -1,16 +1,26 @@
 package com.sangto.rental_car_server.domain.dto.car;
 
+import com.sangto.rental_car_server.domain.enums.ECarTransmission;
+import com.sangto.rental_car_server.domain.enums.EFuelType;
 import lombok.Builder;
 
 @Builder
 public record AddCarRequestDTO(
     String name,
     String licensePlate,
-    String brand,
+    Integer modelId,
     String color,
-    String model,
     Integer numberOfSeats,
     Integer productionYear,
-    String basePrice
+    ECarTransmission transmission,
+    EFuelType fuelType,
+    Integer mileage,
+    Float fuelConsumption,
+    String address,
+    String description,
+    String additionalFunctions,
+    String termOfUse,
+    String basePrice,
+    String[] images
 ) {
 }

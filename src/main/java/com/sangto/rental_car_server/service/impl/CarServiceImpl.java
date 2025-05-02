@@ -1,7 +1,9 @@
 package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.domain.dto.car.*;
+import com.sangto.rental_car_server.domain.dto.image.UpdImageRequestDTO;
 import com.sangto.rental_car_server.domain.entity.Car;
+import com.sangto.rental_car_server.domain.entity.Image;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.ECarStatus;
 import com.sangto.rental_car_server.domain.mapper.CarMapper;
@@ -10,13 +12,15 @@ import com.sangto.rental_car_server.repository.CarRepository;
 import com.sangto.rental_car_server.repository.UserRepository;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.CarService;
+import com.sangto.rental_car_server.service.CloudinaryService;
+import com.sangto.rental_car_server.service.ImageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +30,11 @@ public class CarServiceImpl implements CarService {
     private final UserRepository userRepo;
     private final CarRepository carRepo;
     private final CarMapper carMapper;
+    private final CloudinaryService cloudinaryService;
+    private final ImageService imageService;
+
+    @Value("${cloudinary.folder.car}")
+    private String carFolder;
 
     @Override
     public Car verifyCarOwner(Integer ownerId, Integer carId) {
@@ -86,10 +95,25 @@ public class CarServiceImpl implements CarService {
         Car newCar = carMapper.addCarRequestDTOtoEntity(requestDTO);
         newCar.setCarOwner(findUser.get());
 
-        Car savedCar = carRepo.save(newCar);
-        return Response.successfulResponse(
-                "Add car successfully", carMapper.toCarDetailResponseDTO(savedCar)
-        );
+        // Set Image for Car
+        try {
+            for (String item : requestDTO.images()) {
+                Map resultUpload = cloudinaryService.uploadFileBase64(item, carFolder);
+                Image imageUpload = Image.builder()
+                        .name((String) resultUpload.get("original_filename"))
+                        .imageUrl((String) resultUpload.get("url"))
+                        .imagePublicId((String) resultUpload.get("public_id"))
+                        .createdAt(LocalDate.now())
+                        .build();
+                newCar.addImage(imageUpload);
+            }
+            Car saveCar = carRepo.save(newCar);
+            return Response.successfulResponse(
+                    "Add car successfully", carMapper.toCarDetailResponseDTO(saveCar)
+            );
+        } catch (IOException e) {
+            throw new AppException("Add new car unsuccessfully");
+        }
     }
 
     @Override
@@ -97,6 +121,15 @@ public class CarServiceImpl implements CarService {
         Optional<Car> oldCar = carRepo.findById(carId);
         if (oldCar.isEmpty()) throw new AppException("This car is not existed");
         Car newCar = carMapper.updCarRequestDTOtoEntity(oldCar.get(), requestDTO);
+
+        // Update Image For Car
+        if (requestDTO.images().length > 0) {
+            for (UpdImageRequestDTO item : requestDTO.images()) {
+                imageService.updImage(item, carFolder);
+            }
+        }
+        List<Image> newImage = carRepo.findById(carId).get().getImages();
+        newCar.setImages(newImage);
         Car savedCar = carRepo.save(newCar);
         return Response.successfulResponse(
                 "Update car successfully", carMapper.toCarDetailResponseDTO(savedCar)

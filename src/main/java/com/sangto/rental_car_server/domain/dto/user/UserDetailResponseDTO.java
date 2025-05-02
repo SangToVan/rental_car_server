@@ -11,15 +11,19 @@ import java.util.Date;
 
 @Builder
 public record UserDetailResponseDTO(
-        Integer userId,
+        Integer id,
         String username,
         String email,
+        EUserRole role,
         String birthday,
         String citizenId,
         String phoneNumber,
         String address,
+        String drivingLicense,
+        String avatar,
+        String createdAt,
+        String updatedAt,
         boolean isActive,
-        String balance,
-        EUserRole role
+        String balance
 ) {
 }

@@ -13,8 +13,9 @@ public record BookingResponseDTO(
         BigDecimal basePrice,
         String startDateTime,
         String endDateTime,
-        BigDecimal totalPrice,
-        BigDecimal rentalFee,
+        Long numberOfHour,
+        String totalPrice,
+        String rentalFee,
         EBookingStatus bookingStatus
 ) {
 }

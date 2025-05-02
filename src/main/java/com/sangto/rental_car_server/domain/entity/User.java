@@ -80,6 +80,9 @@ public class User implements UserDetails {
             orphanRemoval = true)
     private List<Car> cars = new ArrayList<>();
 
+    @OneToOne(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
+    private Feedback feedback;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

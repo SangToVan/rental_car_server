@@ -30,8 +30,9 @@ public class BookingMapperImpl implements BookingMapper {
                 .basePrice(entity.getCar().getBasePrice())
                 .startDateTime(TimeUtil.formatToString(entity.getStartDateTime()))
                 .endDateTime(TimeUtil.formatToString(entity.getEndDateTime()))
-                .totalPrice(entity.getTotalPrice())
-                .rentalFee(entity.getRentalFee())
+                .numberOfHour(entity.getNumberOfHours())
+                .totalPrice(entity.getTotalPrice().toString())
+                .rentalFee(entity.getRentalFee().toString())
                 .bookingStatus(entity.getStatus())
                 .build();
     }
@@ -45,11 +46,15 @@ public class BookingMapperImpl implements BookingMapper {
                 .customerInfo(userMapper.toUserDetailResponseDTO(entity.getUser()))
                 .startDateTime(TimeUtil.formatToString(entity.getStartDateTime()))
                 .endDateTime(TimeUtil.formatToString(entity.getEndDateTime()))
+                .numberOfHour(entity.getNumberOfHours())
+                .totalPrice(entity.getTotalPrice().toString())
+                .rentalFee(entity.getRentalFee().toString())
                 .paymentMethod(entity.getPaymentMethod())
                 .status(entity.getStatus())
-                .totalPrice(entity.getTotalPrice())
-                .rentalFee(entity.getRentalFee())
-                .numberOfHour(entity.getNumberOfHours())
+                .driverName(entity.getDriverName())
+                .driverPhone(entity.getDriverPhone())
+                .driverCitizenId(entity.getDriverCitizenId())
+                .relationship(entity.getRelationship())
                 .build();
     }
 
@@ -62,6 +67,10 @@ public class BookingMapperImpl implements BookingMapper {
                 .startDateTime(TimeUtil.formatToString(entity.getStartDateTime()))
                 .endDateTime(TimeUtil.formatToString(entity.getEndDateTime()))
                 .paymentMethod(entity.getPaymentMethod())
+                .driverName(entity.getDriverName())
+                .driverPhone(entity.getDriverPhone())
+                .driverCitizenId(entity.getDriverCitizenId())
+                .relationship(entity.getRelationship())
                 .status(entity.getStatus())
                 .build();
     }
@@ -73,6 +82,10 @@ public class BookingMapperImpl implements BookingMapper {
                 .startDateTime(TimeUtil.convertToDateTime(requestDTO.startDateTime()))
                 .endDateTime(TimeUtil.convertToDateTime(requestDTO.endDateTime()))
                 .paymentMethod(requestDTO.paymentMethod())
+                .driverName(requestDTO.driverName())
+                .driverPhone(requestDTO.driverPhone())
+                .driverCitizenId(requestDTO.driverCitizenId())
+                .relationship(requestDTO.relationship())
                 .status(EBookingStatus.PENDING)
                 .build();
     }
