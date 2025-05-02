@@ -45,7 +45,7 @@ public class BookingController {
 
     @PostMapping(Endpoint.V1.Booking.BASE)
     public ResponseEntity<Response<BookingDetailResponseDTO>> addBooking(
-            HttpServletRequest servletRequest, @RequestBody @Valid AddBookingRequestDTO requestDTO) {
+            HttpServletRequest servletRequest, @RequestBody @Valid AddBookingRequestDTO requestDTO) throws MessagingException {
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.addBooking(AuthUtil.getRequestedUser().getId(), requestDTO));

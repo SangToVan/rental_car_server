@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.constant.MailTemplate;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
@@ -21,7 +22,10 @@ import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
 import com.sangto.rental_car_server.service.EscrowTransactionService;
+import com.sangto.rental_car_server.utility.MailSenderUtil;
 import com.sangto.rental_car_server.utility.RentalCalculateUtil;
+import com.sangto.rental_car_server.utility.TimeUtil;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -33,10 +37,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -50,6 +51,7 @@ public class BookingServiceImpl implements BookingService {
     private final CarService carService;
     private final EscrowTransactionService escrowTransactionService;
     private final BookingMapper bookingMapper;
+    private final MailSenderUtil mailSenderUtil;
 
     @Override
     public Booking verifyBookingCarOwner(Integer ownerId, Integer bookingId) {
@@ -112,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Response<BookingDetailResponseDTO> addBooking(Integer userId, AddBookingRequestDTO requestDTO) {
+    public Response<BookingDetailResponseDTO> addBooking(Integer userId, AddBookingRequestDTO requestDTO) throws MessagingException {
         // find car
         Optional<Car> findCar = carRepo.findById(requestDTO.carId());
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
@@ -158,10 +160,24 @@ public class BookingServiceImpl implements BookingService {
         newBooking.setCar(car);
         newBooking.setUser(customer);
         newBooking.setTotalPrice(totalRentalCost);
-        bookingRepo.save(newBooking);
+        Booking saveBooking = bookingRepo.save(newBooking);
+
+        // Send Mail To Owner
+        String toMail = customer.getEmail();
+        String subject = MailTemplate.RENT_A_CAR.RENT_A_CAR_SUBJECT;
+        String template = MailTemplate.RENT_A_CAR.RENT_A_CAR_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter mailFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String bookingTime = now.format(mailFormat);
+        Map<String, Object> variable = Map.of(
+                "carName", car.getName(),
+                "bookingTime", bookingTime,
+                "bookingId", saveBooking.getId());
+        mailSenderUtil.sendMailWithHTML(toMail, subject, template, variable);
+
         return Response.successfulResponse(
                 "Add new booking successfully",
-                bookingMapper.toBookingDetailResponseDTO(newBooking)
+                bookingMapper.toBookingDetailResponseDTO(saveBooking)
         );
     }
 
@@ -186,11 +202,25 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Response<String> confirmBooking(Integer bookingId, Integer userId) {
+    public Response<String> confirmBooking(Integer bookingId, Integer userId) throws MessagingException {
         Booking booking = this.verifyBookingCarOwner(userId, bookingId);
         if (booking.getStatus() == EBookingStatus.PAID) {
             booking.setStatus(EBookingStatus.CONFIRMED);
             bookingRepo.save(booking);
+
+            User customer = booking.getUser();
+            Car car = booking.getCar();
+
+            // Send Mail To Customer
+            String toMail = customer.getEmail();
+            String subject = MailTemplate.CONFIRM_DEPOSIT.CONFIRM_DEPOSIT_SUBJECT;
+            String template = MailTemplate.CONFIRM_DEPOSIT.CONFIRM_DEPOSIT_TEMPLATE;
+            Map<String, Object> variable = Map.of(
+                    "carName", car.getName(),
+                    "startTime", TimeUtil.formatToString(booking.getStartDateTime()),
+                    "endTime", TimeUtil.formatToString(booking.getEndDateTime()));
+            mailSenderUtil.sendMailWithHTML(toMail, subject, template, variable);
+
             return Response.successfulResponse(
                     "Confirm booking successfully"
             );
@@ -247,10 +277,24 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Response<String> cancelBooking(Integer bookingId, Integer userId) {
+    public Response<String> cancelBooking(Integer bookingId, Integer userId) throws MessagingException {
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
         Booking booking = findBooking.get();
+
+        User owner = booking.getCar().getCarOwner();
+        Car car = booking.getCar();
+
+        // Send Mail To Owner
+        String toMail = owner.getEmail();
+        String subject = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_SUBJECT;
+        String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String cancelTime = now.format(formatter).toString();
+        Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
+        mailSenderUtil.sendMailWithHTML(toMail, subject, template, variable);
+
         // customer cancelled booking
         if (booking.getUser().getId() == userId) {
             // booking is pending
