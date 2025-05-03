@@ -17,6 +17,8 @@ public class Endpoint {
             public static final String BOOKING = BASE + "/bookings";
             public static final String DETAIL_BOOKING = BASE + "/bookings/{id}";
             public static final String GET_WALLET = BASE + "/wallet";
+            public static final String BRAND = BASE + "/brands";
+            public static final String MODEL = BASE + "/models";
         }
 
         public static final class Auth {

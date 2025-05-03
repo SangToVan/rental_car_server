@@ -4,7 +4,10 @@ import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import jakarta.mail.MessagingException;
 
@@ -15,11 +18,11 @@ public interface BookingService {
 
     Booking verifyBookingCustomer(Integer customerId, Integer bookingId);
 
-    Response<List<BookingResponseDTO>> getAllBookings();
+    MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getAllBookings(MetaRequestDTO metaRequestDTO);
 
-    Response<List<BookingResponseDTO>> getAllBookingForUser(Integer userId);
+    MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getAllBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId);
 
-    Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId, Integer ownerId);
+    MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCar(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId);
 
     Response<BookingDetailResponseDTO> getBookingDetail(Integer bookingId);
 

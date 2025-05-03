@@ -8,7 +8,6 @@ import com.sangto.rental_car_server.domain.mapper.CarMapper;
 import com.sangto.rental_car_server.domain.mapper.ImageMapper;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.repository.CarModelRepository;
-import com.sangto.rental_car_server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

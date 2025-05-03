@@ -4,6 +4,9 @@ import com.sangto.rental_car_server.constant.Endpoint;
 import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.utility.AuthUtil;
@@ -14,6 +17,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,11 +34,11 @@ public class BookingController {
     private final JwtTokenUtil jwtTokenUtil;
 
     @GetMapping(Endpoint.V1.Booking.LIST_FOR_USER)
-    public ResponseEntity<Response<List<BookingResponseDTO>>> getListBookingForUser(
-            HttpServletRequest servletRequest) {
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseDTO>>> getListBookingForUser(
+            HttpServletRequest servletRequest, @ParameterObject MetaRequestDTO metaRequestDTO) {
         Integer userId =
                 Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
-        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookingForUser(userId));
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookingForUser(metaRequestDTO,userId));
     }
 
     @GetMapping(Endpoint.V1.Booking.DETAILS)

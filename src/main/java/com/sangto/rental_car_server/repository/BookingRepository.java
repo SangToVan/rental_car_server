@@ -2,6 +2,8 @@ package com.sangto.rental_car_server.repository;
 
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,10 +16,16 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c " + "JOIN FETCH b.user u " + "WHERE u.id = :userId")
-    List<Booking> getListBookingByUserId(@Param("userId") Integer userId);
+    Page<Booking> getListBookingByUserId(@Param("userId") Integer userId, Pageable pageable);
 
     @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c " + "JOIN FETCH b.user u " + "WHERE c.id = :carId")
-    List<Booking> getListBookingByCarId(@Param("carId") Integer carId);
+    Page<Booking> getListBookingByCarId(@Param("carId") Integer carId, Pageable pageable);
+
+    @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c "
+            + "JOIN FETCH b.user u "
+            + "WHERE u.id = :userId AND CONCAT(b.status,' ',b.paymentMethod) LIKE %:keyword%")
+    Page<Booking> getListBookingByUserIdWithKeyword(
+            @Param("userId") Integer userId, @Param("keyword") String keyword, Pageable pageable);
 
     List<Booking> findAllByUserId(Integer userId);
 

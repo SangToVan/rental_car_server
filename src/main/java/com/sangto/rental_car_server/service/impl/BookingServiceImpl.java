@@ -1,12 +1,16 @@
 package com.sangto.rental_car_server.service.impl;
 
 import com.sangto.rental_car_server.constant.MailTemplate;
+import com.sangto.rental_car_server.constant.MetaConstant;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
 import com.sangto.rental_car_server.domain.dto.escrow_transaction.AddEscrowTransactionRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.domain.dto.meta.SortingDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.Car;
 import com.sangto.rental_car_server.domain.entity.User;
@@ -18,6 +22,7 @@ import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.BookingRepository;
 import com.sangto.rental_car_server.repository.CarRepository;
 import com.sangto.rental_car_server.repository.UserRepository;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
@@ -27,6 +32,10 @@ import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import com.sangto.rental_car_server.utility.TimeUtil;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,34 +81,96 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Response<List<BookingResponseDTO>> getAllBookings() {
-        List<Booking> bookings = bookingRepo.findAll();
-        List<BookingResponseDTO> li = bookings.stream()
-                .map(bookingMapper::toBookingResponseDTO).toList();
-        return Response.successfulResponse(
-                "Get all booking successfully", li
+    public MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getAllBookings(MetaRequestDTO metaRequestDTO) {
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = bookingRepo.findAll(pageable);
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseDTO> li = page.getContent().stream()
+                .map(bookingMapper::toBookingResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get all booking successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
         );
     }
 
     @Override
-    public Response<List<BookingResponseDTO>> getAllBookingForUser(Integer userId) {
-        List<Booking> bookings = bookingRepo.getListBookingByUserId(userId);
-        List<BookingResponseDTO> li = bookings.stream()
-                .map(bookingMapper::toBookingResponseDTO).toList();
-        return Response.successfulResponse(
-                "Get all booking for user successfully", li
+    public MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getAllBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId) {
+
+        Optional<User> findUser = userRepo.findById(userId);
+        if (findUser.isEmpty()) throw new AppException("This user is not existed");
+
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = metaRequestDTO.keyword() == null
+                ? bookingRepo.getListBookingByUserId(userId, pageable)
+                : bookingRepo.getListBookingByUserIdWithKeyword(userId, metaRequestDTO.keyword(), pageable);
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseDTO> li = page.getContent().stream()
+                .map(bookingMapper::toBookingResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get all booking for user successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
         );
     }
 
     @Override
-    public Response<List<BookingResponseForOwnerDTO>> getAllBookingForCar(Integer carId, Integer ownerId) {
+    public MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCar(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId) {
         carService.verifyCarOwner(ownerId, carId);
 
-        List<Booking> bookings = bookingRepo.getListBookingByCarId(carId);
-        List<BookingResponseForOwnerDTO> li = bookings.stream()
-                .map(bookingMapper::toBookingResponseForOwnerDTO).toList();
-        return Response.successfulResponse(
-                "Get all booking successfully", li
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = metaRequestDTO.keyword() == null
+                ? bookingRepo.getListBookingByCarId(carId, pageable)
+                : bookingRepo.getListBookingByUserId(carId, pageable);
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseForOwnerDTO> li = page.getContent().stream()
+                .map(temp -> bookingMapper.toBookingResponseForOwnerDTO(temp))
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get all booking successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
         );
     }
 

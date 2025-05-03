@@ -3,7 +3,10 @@ package com.sangto.rental_car_server.controller;
 import com.sangto.rental_car_server.constant.Endpoint;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
 import com.sangto.rental_car_server.domain.dto.car.*;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.entity.User;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
@@ -34,9 +37,11 @@ public class CarController {
     private final BookingService bookingService;
 
     @GetMapping(Endpoint.V1.Car.BASE)
-    public ResponseEntity<Response<List<CarResponseDTO>>> getAllCars() {
-        System.out.println("getAllCars");
-        return ResponseEntity.status(HttpStatus.OK).body(carService.getAllCars());
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<CarResponseDTO>>> searchCars(
+            @ParameterObject @Valid SearchCarRequestDTO requestDTO, @ParameterObject MetaRequestDTO metaRequestDTO) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(carService.searchCarV2(
+                        requestDTO.address(), requestDTO.startTime(), requestDTO.endTime(), metaRequestDTO));
     }
 
     @PostMapping(Endpoint.V1.Car.BASE)
@@ -48,11 +53,11 @@ public class CarController {
     }
 
     @GetMapping(Endpoint.V1.Car.GET_LIST_FOR_OWNER)
-    public ResponseEntity<Response<List<CarResponseDTO>>> getListCarForOwner(
-            HttpServletRequest servletRequest) {
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<CarResponseDTO>>> getListCarForOwner(
+            HttpServletRequest servletRequest, @ParameterObject MetaRequestDTO requestDTO) {
         Integer ownerId =
                 Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
-        return ResponseEntity.status(HttpStatus.OK).body(carService.getListCarsByOwnerId(ownerId));
+        return ResponseEntity.status(HttpStatus.OK).body(carService.getListCarsByOwnerId(requestDTO, ownerId));
     }
 
     @GetMapping(Endpoint.V1.Car.DETAILS)
@@ -80,9 +85,9 @@ public class CarController {
     }
 
     @GetMapping(Endpoint.V1.Car.LIST_CAR_BOOKINGS)
-    public ResponseEntity<Response<List<BookingResponseForOwnerDTO>>> getListBookingByCarId(
-            @PathVariable(name = "id") Integer carId) {
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>>> getListBookingByCarId(
+            @PathVariable(name = "id") Integer carId, @ParameterObject MetaRequestDTO metaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(bookingService.getAllBookingForCar(carId, AuthUtil.getRequestedUser().getId()));
+                .body(bookingService.getAllBookingForCar(metaRequestDTO, carId, AuthUtil.getRequestedUser().getId()));
     }
 }

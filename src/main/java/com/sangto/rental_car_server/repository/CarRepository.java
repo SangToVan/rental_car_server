@@ -1,6 +1,9 @@
 package com.sangto.rental_car_server.repository;
 
 import com.sangto.rental_car_server.domain.entity.Car;
+import com.sangto.rental_car_server.domain.entity.CarModel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,13 +16,72 @@ import java.util.Optional;
 public interface CarRepository extends JpaRepository<Car, Integer> {
 
     @Query("SELECT DISTINCT c FROM Car c " + " JOIN FETCH c.carOwner co "
+            + "LEFT JOIN FETCH c.images i "
             + " WHERE co.id = :ownerId ")
-    List<Car> getListCarByOwner(@Param("ownerId") Integer ownerId);
+    Page<Car> getListCarByOwner(@Param("ownerId") Integer ownerId, Pageable pageable);
+
+    @Query("""
+    SELECT DISTINCT c FROM Car c
+    JOIN FETCH c.carOwner co
+    LEFT JOIN FETCH c.model m
+    LEFT JOIN FETCH m.brand b
+    LEFT JOIN FETCH c.images i
+    WHERE co.id = :ownerId
+    AND CONCAT(c.name, ' ', m.name, ' ', b.name, ' ' , c.address) LIKE %:keyword%
+""")
+    Page<Car> getListCarByOwnerWithKeyword(
+            @Param("ownerId") Integer ownerId,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+
 
     @Query("SELECT DISTINCT c FROM Car c " + " JOIN FETCH c.carOwner co ")
     List<Car> getAllCars();
 
+    @Query("SELECT c FROM Car c " + "JOIN FETCH c.carOwner "
+            +
+            //            "JOIN FETCH c.imageList " +
+            "WHERE c.id = :id")
+    Optional<Car> findByIdWithOwner(@Param("id") Integer id);
+
+    @Query(
+            value =
+                    "SELECT * FROM cars c\n"
+                            + "WHERE c.`status` != 'UNVERIFIED' AND c.`status` != 'SUSPENDED' AND c.address LIKE %:address% AND c.car_id NOT IN (\n"
+                            + "\t\t\t\t\tSELECT b.car_id FROM bookings b \n"
+                            + "                    WHERE b.`status` != 'COMPLETED' AND b.`status` != 'CANCELLED' \n"
+                            + "\t\t\t\t\t\tAND ((b.end_date_time >= :endTime AND b.start_date_time <= :endTime) \n"
+                            + "\t\t\t\t\t\t\t\tOR (b.start_date_time <= :startTime AND b.end_date_time >= :startTime) \n"
+                            + "                                OR (b.end_date_time <= :endTime AND b.start_date_time >= :startTime)))",
+            nativeQuery = true)
+    Page<Car> searchCarV2(
+            @Param("address") String address,
+            @Param("startTime") String startTime,
+            @Param("endTime") String endTime,
+            Pageable pageable);
+
+    @Query(
+            value =
+                    "SELECT * FROM cars c\n"
+                            + "WHERE c.car_id = :carId AND c.`status` != 'UNVERIFIED' AND c.`status` != 'SUSPENDED' AND c.car_id NOT IN (\n"
+                            + "\t\t\t\t\tSELECT b.car_id FROM bookings b \n"
+                            + "                    WHERE b.`status` != 'COMPLETED' AND b.`status` != 'CANCELLED' \n"
+                            + "\t\t\t\t\t\tAND ((b.end_date_time >= :endTime AND b.start_date_time <= :endTime) \n"
+                            + "\t\t\t\t\t\t\t\tOR (b.start_date_time <= :startTime AND b.end_date_time >= :startTime) \n"
+                            + "                                OR (b.end_date_time <= :endTime AND b.start_date_time >= :startTime)))",
+            nativeQuery = true)
+    Optional<Car> checkScheduleCar(
+            @Param("carId") Integer carId, @Param("startTime") String startTime, @Param("endTime") String endTime);
+
     Optional<Car> findCarById(Integer id);
 
     List<Car> findAllByCarOwnerId(Integer ownerId);
+
+    int countByModel(CarModel model);
+
+    @Query("SELECT c.model.brand, COUNT(c) FROM Car c GROUP BY c.model.brand")
+    List<Object[]> countCarsByBrand();
+
+    @Query("SELECT c.model, COUNT(c) FROM Car c GROUP BY c.model")
+    List<Object[]> countCarsByModel();
 }

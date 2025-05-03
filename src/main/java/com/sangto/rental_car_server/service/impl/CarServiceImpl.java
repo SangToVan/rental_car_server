@@ -1,7 +1,11 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.constant.MetaConstant;
 import com.sangto.rental_car_server.domain.dto.car.*;
 import com.sangto.rental_car_server.domain.dto.image.UpdImageRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.domain.dto.meta.SortingDTO;
 import com.sangto.rental_car_server.domain.entity.Car;
 import com.sangto.rental_car_server.domain.entity.Image;
 import com.sangto.rental_car_server.domain.entity.User;
@@ -10,12 +14,17 @@ import com.sangto.rental_car_server.domain.mapper.CarMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.CarRepository;
 import com.sangto.rental_car_server.repository.UserRepository;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.CarService;
 import com.sangto.rental_car_server.service.CloudinaryService;
 import com.sangto.rental_car_server.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -46,27 +55,65 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Response<List<CarResponseDTO>> getListCarsByOwnerId(Integer ownerId) {
+    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getListCarsByOwnerId(MetaRequestDTO metaRequestDTO, Integer ownerId) {
         Optional<User> findUser = userRepo.findById(ownerId);
         if (findUser.isEmpty()) throw new AppException("This owner is not existed");
-        List<Car> cars = carRepo.getListCarByOwner(ownerId);
-        List<CarResponseDTO> li = cars.stream().map(carMapper::toCarResponseDTO).toList();
 
-        return Response.successfulResponse(
-                "Get list car successfully",
-                li
-        );
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Car> page = metaRequestDTO.keyword() == null
+                ? carRepo.getListCarByOwner(ownerId, pageable)
+                : carRepo.getListCarByOwnerWithKeyword(ownerId, metaRequestDTO.keyword(), pageable);
+        if (page.getContent().isEmpty()) throw new AppException("List car is empty");
+
+        List<CarResponseDTO> li = page.getContent().stream()
+                .map(carMapper::toCarResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get list car success",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li);
     }
 
     @Override
-    public Response<List<CarResponseDTO>> getAllCars() {
-        List<Car> cars = carRepo.getAllCars();
-        List<CarResponseDTO> li = cars.stream().map(carMapper::toCarResponseDTO).toList();
+    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getAllCars(MetaRequestDTO metaRequestDTO) {
+        Sort sort = metaRequestDTO.sortDir().equalsIgnoreCase(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
 
-        return Response.successfulResponse(
-                "Get list car successfully",
-                li
-        );
+        Page<Car> page = carRepo.findAll(pageable);
+
+        if (page.isEmpty()) throw new AppException("No cars available");
+
+        List<CarResponseDTO> carList = page.getContent().stream()
+                .map(carMapper::toCarResponseDTO)
+                .toList();
+
+        MetaResponseDTO metaResponseDTO = MetaResponseDTO.builder()
+                .totalItems((int) page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .currentPage(metaRequestDTO.currentPage())
+                .pageSize(metaRequestDTO.pageSize())
+                .sorting(SortingDTO.builder()
+                        .sortField(metaRequestDTO.sortField())
+                        .sortDir(metaRequestDTO.sortDir())
+                        .build())
+                .build();
+
+        return MetaResponse.successfulResponse("Retrieved all cars successfully", metaResponseDTO, carList);
     }
 
     @Override
@@ -80,7 +127,7 @@ public class CarServiceImpl implements CarService {
 
     @Override
     public Response<CarDetailResponseForOwnerDTO> getCarDetailForOwner(Integer carId) {
-        Optional<Car> findCar = carRepo.findById(carId);
+        Optional<Car> findCar = carRepo.findByIdWithOwner(carId);
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
         return Response.successfulResponse(
                 "Get car detail for owner successfully", carMapper.toCarDetailResponseForOwnerDTO(findCar.get())
@@ -172,5 +219,35 @@ public class CarServiceImpl implements CarService {
                 ? "Car with ID " + carId + " has been activated"
                 : "Car with ID " + carId + " has been suspended";
         return Response.successfulResponse(message);
+    }
+
+    @Override
+    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> searchCarV2(String address, String startTime, String endTime, MetaRequestDTO metaRequestDTO) {
+        String field = metaRequestDTO.sortField();
+        if (field.compareTo(MetaConstant.Sorting.DEFAULT_FIELD) == 0) field = "car_id";
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(field).ascending()
+                : Sort.by(field).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Car> page = carRepo.searchCarV2(address, startTime, endTime, pageable);
+
+        if (page.getContent().isEmpty()) throw new AppException("List car is empty");
+        List<CarResponseDTO> li = page.getContent().stream()
+                .map(carMapper::toCarResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Search car success",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li);
     }
 }

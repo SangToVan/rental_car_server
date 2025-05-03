@@ -3,22 +3,25 @@ package com.sangto.rental_car_server.controller;
 import com.sangto.rental_car_server.constant.Endpoint;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
+import com.sangto.rental_car_server.domain.dto.brand.AddCarBrandRequestDTO;
 import com.sangto.rental_car_server.domain.dto.car.AddCarRequestDTO;
 import com.sangto.rental_car_server.domain.dto.car.CarDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.car.UpdCarRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
+import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.domain.dto.model.AddCarModelRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserResponseDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
+import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
-import com.sangto.rental_car_server.service.BookingService;
-import com.sangto.rental_car_server.service.CarService;
-import com.sangto.rental_car_server.service.UserService;
-import com.sangto.rental_car_server.service.WalletService;
+import com.sangto.rental_car_server.service.*;
 import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +39,8 @@ public class AdminController {
     private final CarService carService;
     private final BookingService bookingService;
     private final WalletService walletService;
+    private final CarBrandService carBrandService;
+    private final CarModelService carModelService;
 
     @GetMapping(Endpoint.V1.Admin.DETAIL_CAR)
     public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "id") Integer id) {
@@ -73,8 +78,8 @@ public class AdminController {
     }
 
     @GetMapping(Endpoint.V1.Admin.BOOKING)
-    public ResponseEntity<Response<List<BookingResponseDTO>>> getAllBookings() {
-        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookings());
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseDTO>>> getAllBookings(@ParameterObject MetaRequestDTO metaRequestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookings(metaRequestDTO));
     }
 
     @GetMapping(Endpoint.V1.Admin.DETAIL_BOOKING)
@@ -89,5 +94,15 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 walletService.getWalletDetail(idToken)
         );
+    }
+
+    @PostMapping(Endpoint.V1.Admin.BRAND)
+    public ResponseEntity<Response<String>> addBrand(AddCarBrandRequestDTO requestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(carBrandService.addCarBrand(requestDTO));
+    }
+
+    @PostMapping(Endpoint.V1.Admin.MODEL)
+    public ResponseEntity<Response<String>> addModel(AddCarModelRequestDTO requestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(carModelService.addCarModel(requestDTO));
     }
 }
