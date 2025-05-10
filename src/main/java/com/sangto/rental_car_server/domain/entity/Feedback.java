@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,14 +26,16 @@ public class Feedback {
 
     private Integer rating;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Builder.Default
+    @Column(name = "birthday")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+    private LocalDate createdAt = LocalDate.now();
 
     private String content;
 
     @JsonIgnore
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER, orphanRemoval = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @OneToOne(targetEntity = Booking.class, fetch = FetchType.EAGER, orphanRemoval = false)
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 }

@@ -5,7 +5,9 @@ public class MailTemplate {
 
     public static class CANCEL_BOOKING {
         public static final String CANCEL_BOOKING_TEMPLATE = PREFIX + "/cancel-booking.html";
-        public static final String CANCEL_BOOKING_SUBJECT = "A booking with your car has been cancelled";
+        public static final String CUSTOMER_CANCEL_BOOKING_SUBJECT = "A booking with your car has been cancelled by customer";
+        public static final String OWNER_CANCEL_BOOKING_SUBJECT = "Your booking has been cancelled by owner";
+        public static final String ADMIN_CANCEL_BOOKING_SUBJECT = "Your booking has been cancelled by admin";
         public static final String CANCEL_BOOKING_SUBJECT_2 = "Because you didn't pick up the car after 2 hours.Registration with your car has been canceled";
     }
 

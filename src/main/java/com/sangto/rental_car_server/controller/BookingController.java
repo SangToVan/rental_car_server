@@ -4,11 +4,16 @@ import com.sangto.rental_car_server.constant.Endpoint;
 import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
+import com.sangto.rental_car_server.domain.dto.feedback.AddFeedbackRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
+import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
+import com.sangto.rental_car_server.domain.entity.Feedback;
 import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
+import com.sangto.rental_car_server.service.FeedbackService;
 import com.sangto.rental_car_server.utility.AuthUtil;
 import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -31,6 +36,7 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class BookingController {
     private final BookingService bookingService;
+    private final FeedbackService feedbackService;
     private final JwtTokenUtil jwtTokenUtil;
 
     @GetMapping(Endpoint.V1.Booking.LIST_FOR_USER)
@@ -43,7 +49,7 @@ public class BookingController {
 
     @GetMapping(Endpoint.V1.Booking.DETAILS)
     public ResponseEntity<Response<BookingDetailResponseDTO>> getDetailBooking(
-            @PathVariable(name = "id") Integer bookingId) {
+            @PathVariable(name = "paymentId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingDetail(bookingId));
     }
 
@@ -56,40 +62,54 @@ public class BookingController {
     }
 
     @PatchMapping(Endpoint.V1.Booking.PAYMENT_BOOKING)
-    public ResponseEntity<Response<String>> paymentBooking(@PathVariable(name = "id") Integer bookingId)
-            throws MessagingException {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(bookingService.paymentBooking(bookingId, AuthUtil.getRequestedUser().getId()));
+    public ResponseEntity<Response<PaymentResponseDTO>> paymentBooking(
+            @PathVariable(name = "paymentId") Integer bookingId,
+            @RequestBody @Valid AddPaymentRequestDTO requestDTO,
+            HttpServletRequest request
+    ) throws MessagingException {
+        return ResponseEntity.ok(
+                bookingService.paymentBooking(bookingId, AuthUtil.getRequestedUser().getId(), requestDTO, request)
+        );
     }
 
+
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_BOOKING)
-    public ResponseEntity<Response<String>> confirmBooking(@PathVariable(name = "id") Integer bookingId)
+    public ResponseEntity<Response<String>> confirmBooking(@PathVariable(name = "paymentId") Integer bookingId)
             throws MessagingException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmBooking(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_PICK_UP)
-    public ResponseEntity<Response<String>> confirmPickUp(@PathVariable(name = "id") Integer bookingId) {
+    public ResponseEntity<Response<String>> confirmPickUp(@PathVariable(name = "paymentId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.confirmPickup(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_RETURN)
-    public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "id") Integer bookingId) {
+    public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "paymentId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmReturn(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.COMPLETE_BOOKING)
-    public ResponseEntity<Response<String>> completeBooking(@PathVariable(name = "id") Integer bookingId) {
+    public ResponseEntity<Response<String>> completeBooking(@PathVariable(name = "paymentId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.completeBooking(bookingId));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CANCELLED_BOOKING)
-    public ResponseEntity<Response<String>> cancelBooking(@PathVariable(name = "id") Integer bookingId)
+    public ResponseEntity<Response<String>> cancelBooking(@PathVariable(name = "paymentId") Integer bookingId)
             throws MessagingException {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(bookingService.cancelBooking(AuthUtil.getRequestedUser().getId(), bookingId));
+                .body(bookingService.cancelBooking(bookingId, AuthUtil.getRequestedUser().getId()));
+    }
+
+    @PostMapping(Endpoint.V1.Booking.FEEDBACK)
+    public ResponseEntity<Response<Feedback>> giveRating(
+            @PathVariable(name = "paymentId") Integer bookingId, @RequestBody @Valid AddFeedbackRequestDTO requestDTO) {
+        Feedback feedback =
+                feedbackService.addFeedback(AuthUtil.getRequestedUser().getId(), bookingId, requestDTO);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(Response.successfulResponse("Send feedback successfully", feedback));
     }
 }

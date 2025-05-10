@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
+import com.sangto.rental_car_server.domain.enums.EVerifiedLicense;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -34,24 +35,44 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private EUserRole role;
 
+    @Builder.Default
     @Column(name = "birthday")
-    @DateTimeFormat(pattern = TimeFormatConstant.DATE_FORMAT)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATE_FORMAT)
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate birthday = LocalDate.now();
+
+    @Builder.Default
+    private String gender = "Nam";
 
     private String citizenId;
     private String phoneNumber;
     private String address;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private EVerifiedLicense verifiedLicense = EVerifiedLicense.WAITING;
+
     private String drivingLicense;
+    private String licenseFullName;
+
+    @DateTimeFormat(pattern = TimeFormatConstant.DATE_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATE_FORMAT)
+    private LocalDate licenseBirthday;
+
+    private String licenseImage;
+    private String licenseImagePublicId;
+
     private String avatar;
     private String avatarPublicId;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @Builder.Default
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate createdAt = LocalDate.now();
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @Builder.Default
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate updatedAt = LocalDate.now();
 
     private boolean isActive;
@@ -79,10 +100,6 @@ public class User implements UserDetails {
             fetch = FetchType.EAGER,
             orphanRemoval = true)
     private List<Car> cars = new ArrayList<>();
-
-    @OneToOne(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
-    private Feedback feedback;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

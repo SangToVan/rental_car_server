@@ -12,6 +12,8 @@ import java.util.List;
 public interface CarService {
     Car verifyCarOwner(Integer ownerId, Integer carId);
 
+    Response<List<CarResponseDTO>> getListCarsForHome();
+
     MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getListCarsByOwnerId(MetaRequestDTO metaRequestDTO, Integer ownerId);
 
     MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getAllCars(MetaRequestDTO metaRequestDTO);

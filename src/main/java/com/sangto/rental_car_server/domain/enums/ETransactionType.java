@@ -9,9 +9,11 @@ public enum ETransactionType {
     DEPOSIT("Deposit"),
     TOP_UP("Top up"),
     WITHDRAW("Withdraw"),
-    PAYMENT("Payment"),
-    RELEASE("Release"),
-    REFUND("Refund");
+    PAYMENT_BOOKING("Payment booking"),
+    RELEASE_PAYMENT("Release payment"),
+    REFUND_PAYMENT("Refund payment"),
+    DEBIT("Debit"),
+    CREDIT("Credit");
 
     private final String title;
 }

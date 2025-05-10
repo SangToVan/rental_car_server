@@ -61,24 +61,24 @@ public class CarController {
     }
 
     @GetMapping(Endpoint.V1.Car.DETAILS)
-    public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "paymentId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetail(id));
     }
 
     @GetMapping(Endpoint.V1.Car.DETAILS_FOR_OWNER)
     public ResponseEntity<Response<CarDetailResponseForOwnerDTO>> getCarDetailForOwner(
-            @PathVariable(name = "id") Integer id) {
+            @PathVariable(name = "paymentId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetailForOwner(id));
     }
 
     @PatchMapping(Endpoint.V1.Car.DETAILS_FOR_OWNER)
     public ResponseEntity<Response<CarDetailResponseDTO>> updateCar(
-            @PathVariable(name = "id") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
+            @PathVariable(name = "paymentId") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.updateCar(id, requestDTO));
     }
 
     @PatchMapping(Endpoint.V1.Car.STATUS)
-    public ResponseEntity<Response<String>> changeStatus(@PathVariable(name = "id") Integer carId) {
+    public ResponseEntity<Response<String>> changeStatus(@PathVariable(name = "paymentId") Integer carId) {
         User user =
                 (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.status(HttpStatus.OK).body(carService.changeCarStatus(carId));
@@ -86,7 +86,7 @@ public class CarController {
 
     @GetMapping(Endpoint.V1.Car.LIST_CAR_BOOKINGS)
     public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>>> getListBookingByCarId(
-            @PathVariable(name = "id") Integer carId, @ParameterObject MetaRequestDTO metaRequestDTO) {
+            @PathVariable(name = "paymentId") Integer carId, @ParameterObject MetaRequestDTO metaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.getAllBookingForCar(metaRequestDTO, carId, AuthUtil.getRequestedUser().getId()));
     }

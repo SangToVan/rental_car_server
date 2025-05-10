@@ -55,6 +55,14 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    public Response<List<CarResponseDTO>> getListCarsForHome() {
+        List<Car> list = carRepo.findTop8CarsByRating();
+        List<CarResponseDTO> li = list.stream().map(carMapper::toCarResponseDTO).toList();
+
+        return Response.successfulResponse("Get list car for home successfully", li);
+    }
+
+    @Override
     public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getListCarsByOwnerId(MetaRequestDTO metaRequestDTO, Integer ownerId) {
         Optional<User> findUser = userRepo.findById(ownerId);
         if (findUser.isEmpty()) throw new AppException("This owner is not existed");
@@ -189,13 +197,13 @@ public class CarServiceImpl implements CarService {
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
         Car car = findCar.get();
 
-        if (car.getCarStatus() == ECarStatus.UNVERIFIED) {
-            car.setCarStatus(ECarStatus.ACTIVE);
+        if (car.getStatus() == ECarStatus.UNVERIFIED) {
+            car.setStatus(ECarStatus.ACTIVE);
         } else {
-            car.setCarStatus(ECarStatus.UNVERIFIED);
+            car.setStatus(ECarStatus.UNVERIFIED);
         }
         carRepo.save(car);
-        String message = car.getCarStatus() == ECarStatus.ACTIVE
+        String message = car.getStatus() == ECarStatus.ACTIVE
                 ? "Car with ID " + carId + " has been verified"
                 : "Car with ID " + carId + " has been unverified";
         return Response.successfulResponse(message);
@@ -207,15 +215,15 @@ public class CarServiceImpl implements CarService {
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
         Car car = findCar.get();
 
-        if (car.getCarStatus() == ECarStatus.UNVERIFIED) {
+        if (car.getStatus() == ECarStatus.UNVERIFIED) {
             throw new AppException("This car can not change status");
-        } else if (car.getCarStatus() == ECarStatus.SUSPENDED) {
-            car.setCarStatus(ECarStatus.ACTIVE);
+        } else if (car.getStatus() == ECarStatus.SUSPENDED) {
+            car.setStatus(ECarStatus.ACTIVE);
         } else {
-            car.setCarStatus(ECarStatus.SUSPENDED);
+            car.setStatus(ECarStatus.SUSPENDED);
         }
         carRepo.save(car);
-        String message = car.getCarStatus() == ECarStatus.ACTIVE
+        String message = car.getStatus() == ECarStatus.ACTIVE
                 ? "Car with ID " + carId + " has been activated"
                 : "Car with ID " + carId + " has been suspended";
         return Response.successfulResponse(message);

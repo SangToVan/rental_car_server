@@ -11,7 +11,7 @@ import java.util.List;
 
 @Builder
 public record CarDetailResponseForOwnerDTO(
-        Integer id,
+        Integer carId,
         String name,
         String licensePlate,
         String brand,

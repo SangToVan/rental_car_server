@@ -17,4 +17,10 @@ public interface WalletService {
     void debitWallet(Integer walletId, BigDecimal amount);
 
     Response<String> transferWallet(Integer fromWalletId, Integer toWalletId, BigDecimal amount);
+
+    Response<String> paymentBooking(Integer customerId, BigDecimal amount, Integer bookingId);
+
+    Response<String> releaseBooking(Integer ownerId, BigDecimal amount, Integer bookingId);
+
+    Response<String> refundBooking(Integer customerId, BigDecimal amount, Integer bookingId);
 }

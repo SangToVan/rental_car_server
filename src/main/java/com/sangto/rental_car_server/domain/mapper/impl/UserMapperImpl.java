@@ -3,6 +3,7 @@ package com.sangto.rental_car_server.domain.mapper.impl;
 import com.sangto.rental_car_server.domain.dto.auth.RegisterUserResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UpdUserRequestDTO;
 import com.sangto.rental_car_server.domain.entity.Wallet;
+import com.sangto.rental_car_server.domain.enums.EVerifiedLicense;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
 import com.sangto.rental_car_server.domain.dto.user.AddUserRequestDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
@@ -36,18 +37,21 @@ public class UserMapperImpl implements UserMapper {
     @Override
     public UserDetailResponseDTO toUserDetailResponseDTO(User entity) {
         return UserDetailResponseDTO.builder()
-                .id(entity.getId())
+                .userId(entity.getId())
                 .username(entity.getUsername())
                 .email(entity.getEmail())
                 .role(entity.getRole())
-                .birthday(entity.getBirthday().toString())
+                .birthday(entity.getBirthday())
+                .gender(entity.getGender())
                 .citizenId(entity.getCitizenId())
                 .phoneNumber(entity.getPhoneNumber())
-                .address(entity.getAddress())
-                .drivingLicense(entity.getDrivingLicense())
                 .avatar(entity.getAvatar())
-                .createdAt(entity.getCreatedAt().toString())
-                .updatedAt(entity.getUpdatedAt().toString())
+                .verifiedLicense(entity.getVerifiedLicense())
+                .drivingLicense(entity.getDrivingLicense())
+                .licenseFullName(entity.getLicenseFullName())
+                .licenseBirthday(entity.getLicenseBirthday())
+                .licenseImage(entity.getLicenseImage())
+                .createdAt(entity.getCreatedAt())
                 .isActive(entity.isActive())
                 .balance(entity.getWallet().getBalance().toString())
                 .build();
@@ -86,10 +90,11 @@ public class UserMapperImpl implements UserMapper {
     public User updUserRequestDTOtoEntity(User oldUser, UpdUserRequestDTO requestDTO) {
         oldUser.setUsername(requestDTO.username());
         oldUser.setBirthday(requestDTO.birthday());
+        oldUser.setGender(requestDTO.gender());
         oldUser.setCitizenId(requestDTO.citizenId());
         oldUser.setPhoneNumber(requestDTO.phoneNumber());
-        oldUser.setAddress(requestDTO.address());
-        oldUser.setDrivingLicense(requestDTO.drivingLicense());
+        oldUser.setEmail(requestDTO.email());
+
         if (requestDTO.avatar() != null && !requestDTO.avatar().isEmpty()) {
             try {
                 Map uploadResult = cloudinaryService.uploadFileBase64(requestDTO.avatar(), "avatar");
@@ -97,6 +102,22 @@ public class UserMapperImpl implements UserMapper {
                 String avatarPublicId = (String) uploadResult.get("public_id");
                 oldUser.setAvatar(avatarUrl);
                 oldUser.setAvatarPublicId(avatarPublicId);
+            } catch (IOException e) {
+                throw new AppException("USER::UPLOAD_FILE_FAILED", e);
+            }
+        }
+
+        oldUser.setVerifiedLicense(EVerifiedLicense.WAITING);
+        oldUser.setDrivingLicense(requestDTO.drivingLicense());
+        oldUser.setLicenseFullName(requestDTO.licenseFullName());
+        oldUser.setLicenseBirthday(requestDTO.licenseBirthday());
+        if(requestDTO.licenseImage() != null && !requestDTO.licenseImage().isEmpty()) {
+            try {
+                Map uploadResult = cloudinaryService.uploadFileBase64(requestDTO.licenseImage(), "license");
+                String imageUrl = (String) uploadResult.get("url");
+                String imagePublicId = (String) uploadResult.get("public_id");
+                oldUser.setLicenseImage(imageUrl);
+                oldUser.setLicenseImagePublicId(imagePublicId);
             } catch (IOException e) {
                 throw new AppException("USER::UPLOAD_FILE_FAILED", e);
             }

@@ -9,7 +9,7 @@ public enum EPaymentStatus {
     PENDING("Pending"),
     SUCCESS("Success"),
     FAILED("Failed"),
-    REFUNDED("Refunded");
+    EXPIRED("Expired");
 
     private final String title;
 }

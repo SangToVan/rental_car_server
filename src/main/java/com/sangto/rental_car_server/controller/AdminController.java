@@ -43,7 +43,7 @@ public class AdminController {
     private final CarModelService carModelService;
 
     @GetMapping(Endpoint.V1.Admin.DETAIL_CAR)
-    public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "paymentId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetail(id));
     }
 
@@ -57,12 +57,12 @@ public class AdminController {
 
     @PatchMapping(Endpoint.V1.Admin.UPDATE_CAR)
     public ResponseEntity<Response<CarDetailResponseDTO>> updateCar(
-            @PathVariable(name = "id") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
+            @PathVariable(name = "paymentId") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.updateCar(id, requestDTO));
     }
 
     @PatchMapping(Endpoint.V1.Admin.VERIFY_CAR)
-    public ResponseEntity<Response<String>> verifyCar(@PathVariable(name = "id", required = true) Integer id) {
+    public ResponseEntity<Response<String>> verifyCar(@PathVariable(name = "paymentId", required = true) Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.verifyCar(id));
     }
 
@@ -73,7 +73,7 @@ public class AdminController {
     }
 
     @GetMapping(Endpoint.V1.Admin.DETAIL_USER)
-    public ResponseEntity<Response<UserDetailResponseDTO>> getUserDetail(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<Response<UserDetailResponseDTO>> getUserDetail(@PathVariable(name = "paymentId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(userService.getDetailUser(id));
     }
 
@@ -83,7 +83,7 @@ public class AdminController {
     }
 
     @GetMapping(Endpoint.V1.Admin.DETAIL_BOOKING)
-    public ResponseEntity<Response<BookingDetailResponseDTO>> getBookingDetail(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<Response<BookingDetailResponseDTO>> getBookingDetail(@PathVariable(name = "paymentId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingDetail(id));
     }
 

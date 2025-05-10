@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public enum EPaymentMethod {
-    MY_WALLET("My wallet"),
+    WALLET("My wallet"),
     CASH("Cash"),
     BANK("Bank transfer");
     private final String title;

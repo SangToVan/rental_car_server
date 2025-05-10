@@ -34,9 +34,11 @@ public class Car {
     @Column(nullable = false, unique = true)
     private String licensePlate;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "model_id")
-    private CarModel model;
+//    @ManyToOne(fetch = FetchType.LAZY)
+//    @JoinColumn(name = "model_id")
+//    private CarModel model;
+    private String brand;
+    private String model;
 
     private String color;
     private Integer numberOfSeats;
@@ -55,19 +57,33 @@ public class Car {
     private String additionalFunctions;
     private String termsOfUse;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @Builder.Default
+    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDate createdAt = LocalDate.now();
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @Builder.Default
+    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDate updatedAt = LocalDate.now();
 
     @Column(nullable = false)
     private BigDecimal basePrice;
 
+    private Integer maxDeliveryDistance;
+    private Integer deliveryFee;
+    private Integer freeDeliveryDistance;
+
+    private Integer kmPerDay;
+    private Integer kmOverDayFee;
+
+    private Integer discountPerWeek;
+
+    @Builder.Default
+    private Boolean quickRent = Boolean.FALSE;
+
     @Enumerated(EnumType.STRING)
-    private ECarStatus carStatus;
+    private ECarStatus status;
 
     private Double rating;
 

@@ -11,12 +11,13 @@ import com.sangto.rental_car_server.domain.dto.escrow_transaction.AddEscrowTrans
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.meta.SortingDTO;
+import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
+import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.Car;
+import com.sangto.rental_car_server.domain.entity.Payment;
 import com.sangto.rental_car_server.domain.entity.User;
-import com.sangto.rental_car_server.domain.enums.EBookingStatus;
-import com.sangto.rental_car_server.domain.enums.ECarStatus;
-import com.sangto.rental_car_server.domain.enums.EscrowStatus;
+import com.sangto.rental_car_server.domain.enums.*;
 import com.sangto.rental_car_server.domain.mapper.BookingMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.BookingRepository;
@@ -27,10 +28,12 @@ import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.CarService;
 import com.sangto.rental_car_server.service.EscrowTransactionService;
+import com.sangto.rental_car_server.service.PaymentService;
 import com.sangto.rental_car_server.utility.MailSenderUtil;
 import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import com.sangto.rental_car_server.utility.TimeUtil;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,13 +44,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +58,7 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepo;
     private final BookingRepository bookingRepo;
     private final CarService carService;
+    private final PaymentService paymentService;
     private final EscrowTransactionService escrowTransactionService;
     private final BookingMapper bookingMapper;
     private final MailSenderUtil mailSenderUtil;
@@ -155,7 +156,7 @@ public class BookingServiceImpl implements BookingService {
                 : bookingRepo.getListBookingByUserId(carId, pageable);
         if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
         List<BookingResponseForOwnerDTO> li = page.getContent().stream()
-                .map(temp -> bookingMapper.toBookingResponseForOwnerDTO(temp))
+                .map(bookingMapper::toBookingResponseForOwnerDTO)
                 .toList();
 
         return MetaResponse.successfulResponse(
@@ -192,19 +193,23 @@ public class BookingServiceImpl implements BookingService {
         Car car = findCar.get();
 
         // check car status
-        if(car.getCarStatus() == ECarStatus.UNVERIFIED) {
+        if(car.getStatus() == ECarStatus.UNVERIFIED) {
             throw new AppException("This car is unverified");
         }
-        if (car.getCarStatus() == ECarStatus.SUSPENDED) {
+        if (car.getStatus() == ECarStatus.SUSPENDED) {
             throw new AppException("This car is suspended");
         }
 
         // Check schedule to rent car
-
+        Optional<Car> checkScheduleCar =
+                carRepo.checkScheduleCar(requestDTO.carId(), requestDTO.startDateTime(), requestDTO.endDateTime());
+        if (checkScheduleCar.isEmpty()) throw new AppException("Invalid booking schedule. Please try again.");
         // find customer
         Optional<User> findCustomer = userRepo.findById(userId);
         if (findCustomer.isEmpty()) throw new AppException("This user is not existed");
         User customer = findCustomer.get();
+
+        if (customer.getId().equals(car.getCarOwner().getId())) throw new AppException("Owner can not rent car by yourself");
 
         // Calculate rental duration and rental fee
         // Convert startDateTime and endDateTime from String to Date
@@ -230,7 +235,17 @@ public class BookingServiceImpl implements BookingService {
         Booking newBooking = bookingMapper.addBookingRequestDTOtoEntity(requestDTO);
         newBooking.setCar(car);
         newBooking.setUser(customer);
+
         newBooking.setTotalPrice(totalRentalCost);
+        newBooking.setStatus(EBookingStatus.PENDING);
+        newBooking.setDepositAmount(BigDecimal.ZERO);
+        newBooking.setTotalPaidAmount(BigDecimal.ZERO);
+        newBooking.setNeedToPayInCash(BigDecimal.ZERO);
+        newBooking.setRefundAmount(BigDecimal.ZERO);
+        newBooking.setPayoutAmount(BigDecimal.ZERO);
+        newBooking.setRefunded(false);
+        newBooking.setPayoutDone(false);
+
         Booking saveBooking = bookingRepo.save(newBooking);
 
         // Send Mail To Owner
@@ -254,18 +269,18 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public Response<String> paymentBooking(Integer bookingId, Integer userId) {
+    public Response<PaymentResponseDTO> paymentBooking(Integer bookingId, Integer userId, AddPaymentRequestDTO requestDTO, HttpServletRequest request) {
         Booking booking = this.verifyBookingCustomer(userId, bookingId);
         if (booking.getStatus() == EBookingStatus.PENDING) {
-            escrowTransactionService.addEscrowTransaction(AddEscrowTransactionRequestDTO.builder()
-                            .bookingId(booking.getId())
-                            .amount(booking.getTotalPrice())
-                            .status(EscrowStatus.PENDING)
-                    .build());
-            booking.setStatus(EBookingStatus.PAID);
+
+            PaymentResponseDTO responseDTO = paymentService.addPayment(booking.getId(), requestDTO, request);
+
+            if (booking.getTotalPaidAmount().compareTo(booking.getTotalPrice()) >= 0) {
+                booking.setStatus(EBookingStatus.PAID);
+            }
             bookingRepo.save(booking);
             return Response.successfulResponse(
-                    "Payment booking successfully"
+                    "Payment booking successfully", responseDTO
             );
         } else {
             throw new AppException("Cannot payment booking");
@@ -334,8 +349,17 @@ public class BookingServiceImpl implements BookingService {
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
         Booking booking = findBooking.get();
+        PaymentResponseDTO responseDTO;
         if (booking.getStatus() == EBookingStatus.RETURNED) {
-            escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.RELEASED);
+
+            try {
+                if (!booking.isPayoutDone()) {
+                    paymentService.releasePayment(booking.getId());
+                }
+            } catch (AppException e) {
+                throw new AppException(e.getMessage(), e.getCause());
+            }
+
             booking.setStatus(EBookingStatus.COMPLETED);
             bookingRepo.save(booking);
             return Response.successfulResponse(
@@ -351,14 +375,52 @@ public class BookingServiceImpl implements BookingService {
     public Response<String> cancelBooking(Integer bookingId, Integer userId) throws MessagingException {
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
-        Booking booking = findBooking.get();
 
+        Optional<User> findUser = userRepo.findById(userId);
+        if (findUser.isEmpty()) throw new AppException("This user is not existed");
+
+        Booking booking = findBooking.get();
+        User user = findUser.get();
+
+        if(user.getRole() == EUserRole.ADMIN) {
+            return adminCancelBooking(booking.getId());
+        } else {
+            if (Objects.equals(booking.getUser().getId(), user.getId())) {
+                return customerCancelBooking(booking.getId(), user.getId());
+            } else if (Objects.equals(booking.getCar().getCarOwner().getId(), user.getId())) {
+                return ownerCancelBooking(booking.getId(), user.getId());
+            }
+        }
+
+        throw new AppException("Cannot cancel booking");
+    }
+
+    @Override
+    @Transactional
+    public Response<String> customerCancelBooking(Integer bookingId, Integer userId) throws MessagingException {
+        Booking booking = this.verifyBookingCustomer(userId, bookingId);
+
+        User customer = booking.getUser();
         User owner = booking.getCar().getCarOwner();
         Car car = booking.getCar();
 
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+            // booking is paid or confirmed
+        } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+            paymentService.refundPayment(booking.getId());
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+        } else {
+            throw new AppException("Booking is in progress, cannot cancel");
+        }
+
         // Send Mail To Owner
         String toMail = owner.getEmail();
-        String subject = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_SUBJECT;
+        String subject = MailTemplate.CANCEL_BOOKING.CUSTOMER_CANCEL_BOOKING_SUBJECT;
         String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -366,41 +428,90 @@ public class BookingServiceImpl implements BookingService {
         Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
         mailSenderUtil.sendMailWithHTML(toMail, subject, template, variable);
 
-        // customer cancelled booking
-        if (booking.getUser().getId() == userId) {
-            // booking is pending
-            if (booking.getStatus() == EBookingStatus.PENDING) {
-                booking.setStatus(EBookingStatus.CANCELLED);
-                bookingRepo.save(booking);
-                return Response.successfulResponse(
-                        "Confirm cancelled successfully"
-                );
+        return Response.successfulResponse(
+                "Confirm cancelled successfully"
+        );
+    }
+
+    @Override
+    @Transactional
+    public Response<String> ownerCancelBooking(Integer bookingId, Integer userId) throws MessagingException {
+        Booking booking = this.verifyBookingCarOwner(userId, bookingId);
+
+        User customer = booking.getUser();
+        User owner = booking.getCar().getCarOwner();
+        Car car = booking.getCar();
+
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
             // booking is paid or confirmed
-            } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
-                escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.REFUNDED);
-                booking.setStatus(EBookingStatus.CANCELLED);
-                bookingRepo.save(booking);
-                return Response.successfulResponse(
-                        "Confirm cancelled successfully"
-                );
-            } else {
-                throw new AppException("Cannot cancel pickup");
-            }
-        // owner cancelled booking
-        } else if (booking.getCar().getCarOwner().getId() == userId) {
-            if (booking.getStatus() == EBookingStatus.PAID) {
-                escrowTransactionService.updateEscrowStatus(booking.getId(), EscrowStatus.REFUNDED);
-                booking.setStatus(EBookingStatus.CANCELLED);
-                bookingRepo.save(booking);
-                return Response.successfulResponse(
-                        "Confirm cancelled successfully"
-                );
-            // booking is confirmed
-            } else {
-                throw new AppException("Cannot cancel booking");
-            }
+        } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+            paymentService.refundPayment(booking.getId());
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
         } else {
-            throw new AppException("Cannot cancel return");
+            throw new AppException("Booking is in progress, cannot cancel");
         }
+
+        // Send Mail To Customer
+        String toMail = customer.getEmail();
+        String subject = MailTemplate.CANCEL_BOOKING.OWNER_CANCEL_BOOKING_SUBJECT;
+        String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String cancelTime = now.format(formatter).toString();
+        Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
+        mailSenderUtil.sendMailWithHTML(toMail, subject, template, variable);
+
+        return Response.successfulResponse(
+                "Confirm cancelled successfully"
+        );
+    }
+
+    @Override
+    @Transactional
+    public Response<String> adminCancelBooking(Integer bookingId) throws MessagingException {
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        Booking booking = findBooking.get();
+
+        User customer = booking.getUser();
+        User owner = booking.getCar().getCarOwner();
+        Car car = booking.getCar();
+
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+            // booking is paid or confirmed
+        } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+            paymentService.refundPayment(booking.getId());
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+        } else {
+            throw new AppException("Booking is in progress, cannot cancel");
+        }
+
+        // Send mail
+        String toMailCustomer = customer.getEmail();
+        String toMailOwner = owner.getEmail();
+
+        String subject = MailTemplate.CANCEL_BOOKING.ADMIN_CANCEL_BOOKING_SUBJECT;
+        String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String cancelTime = now.format(formatter).toString();
+        Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
+
+        mailSenderUtil.sendMailWithHTML(toMailCustomer, subject, template, variable);
+        mailSenderUtil.sendMailWithHTML(toMailOwner, subject, template, variable);
+
+        return Response.successfulResponse(
+                "Confirm cancelled successfully"
+        );
     }
 }

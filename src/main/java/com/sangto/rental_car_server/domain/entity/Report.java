@@ -43,6 +43,7 @@ public class Report {
     @Enumerated(EnumType.STRING)
     private EReportStatus status = EReportStatus.PENDING;
 
+    @Builder.Default
     @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDateTime createdAt = LocalDateTime.now();

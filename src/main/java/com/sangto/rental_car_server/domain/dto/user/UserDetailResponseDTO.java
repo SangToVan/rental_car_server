@@ -1,28 +1,32 @@
 package com.sangto.rental_car_server.domain.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
+import com.sangto.rental_car_server.domain.enums.EVerifiedLicense;
 import lombok.Builder;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Builder
 public record UserDetailResponseDTO(
-        Integer id,
+        Integer userId,
         String username,
         String email,
         EUserRole role,
-        String birthday,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+        LocalDate birthday,
+        String gender,
         String citizenId,
         String phoneNumber,
-        String address,
-        String drivingLicense,
         String avatar,
-        String createdAt,
-        String updatedAt,
+        EVerifiedLicense verifiedLicense,
+        String drivingLicense,
+        String licenseFullName,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+        LocalDate licenseBirthday,
+        String licenseImage,
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
+        LocalDate createdAt,
         boolean isActive,
         String balance
 ) {

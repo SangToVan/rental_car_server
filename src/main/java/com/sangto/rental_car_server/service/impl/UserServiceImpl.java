@@ -38,12 +38,13 @@ public class UserServiceImpl implements UserService {
     @PostConstruct
     public void init() {
         initializeAdmin();
+        initializeSystem();
     }
 
     @Override
     public void initializeAdmin() {
-        List<User> users = userRepo.findByRole(EUserRole.ADMIN);
-        if (users.isEmpty()) {
+        Optional<User> findAdmin = userRepo.findFirstByRole(EUserRole.ADMIN);
+        if (findAdmin.isEmpty()) {
             User admin = new User();
             admin.setUsername("admin");
             admin.setEmail("admin@gmail.com");
@@ -58,6 +59,26 @@ public class UserServiceImpl implements UserService {
             log.warn("Admin user already exists!");
         }
         log.info("Admin user has been initialized!");
+    }
+
+    @Override
+    public void initializeSystem() {
+        Optional<User> findSystem = userRepo.findFirstByRole(EUserRole.SYSTEM);
+        if (findSystem.isEmpty()) {
+            User systemAdmin = new User();
+            systemAdmin.setUsername("systemadmin");
+            systemAdmin.setEmail("systemadmin@gmail.com");
+            PasswordEncoder passwordEncoder1 = new BCryptPasswordEncoder(10);
+            systemAdmin.setPassword(passwordEncoder1.encode("systemadmin123"));
+            systemAdmin.setRole(EUserRole.SYSTEM);
+            systemAdmin.setActive(true);
+            systemAdmin.setWallet(new Wallet());
+            userRepo.save(systemAdmin);
+            log.warn("System admin has been created with default password!");
+        } else {
+            log.warn("System admin already exists!");
+        }
+        log.info("System admin has been initialized!");
     }
 
     @Override

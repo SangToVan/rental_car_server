@@ -5,10 +5,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum ECarTransmission {
-    AUTOMATIC("Automatic"),
-    MANUAL("Manual"),
-    SEMI_AUTOMATIC("Semi-Automatic");
+public enum EVerifiedLicense {
+    VERIFIED("Đã xác thực"),
+    UNVERIFIED("Xác thực thất bại"),
+    WAITING("Chờ xác thực");
 
     private final String title;
 }

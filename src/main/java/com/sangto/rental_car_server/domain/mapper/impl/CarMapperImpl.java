@@ -7,7 +7,7 @@ import com.sangto.rental_car_server.domain.enums.ECarStatus;
 import com.sangto.rental_car_server.domain.mapper.CarMapper;
 import com.sangto.rental_car_server.domain.mapper.ImageMapper;
 import com.sangto.rental_car_server.domain.mapper.UserMapper;
-import com.sangto.rental_car_server.repository.CarModelRepository;
+import com.sangto.rental_car_server.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +21,8 @@ public class CarMapperImpl implements CarMapper {
 
     private final UserMapper userMapper;
     private final ImageMapper imageMapper;
-    private final CarModelRepository carModelRepo;
+    //private final CarModelRepository carModelRepo;
+    private final BookingRepository bookingRepo;
 
     @Override
     public CarResponseDTO toCarResponseDTO(Car entity) {
@@ -29,15 +30,17 @@ public class CarMapperImpl implements CarMapper {
                 .map(imageMapper::toImageResponseDTO)
                 .toList();
         return CarResponseDTO.builder()
-                .id(entity.getId())
+                .carId(entity.getId())
                 .name(entity.getName())
-                .licensePlate(entity.getLicensePlate())
-                .brand(entity.getModel().getBrand().getName())
-                .model(entity.getModel().getName())
+                .brand(entity.getBrand())
+                .model(entity.getModel())
+                .transmission(entity.getTransmission())
+                .numberOfSeats(entity.getNumberOfSeats())
+                .fuelType(entity.getFuelType())
                 .address(entity.getAddress())
-                .basePrice(entity.getBasePrice().toString())
-                .carStatus(entity.getCarStatus())
+                .basePrice(entity.getBasePrice().toBigInteger())
                 .rating(entity.getRating())
+                .bookingCount(bookingRepo.countCompletedBookingsByCarId(entity.getId()))
                 .images(imageList)
                 .build();
     }
@@ -48,11 +51,10 @@ public class CarMapperImpl implements CarMapper {
                 .map(imageMapper::toImageResponseDTO)
                 .toList();
         return CarDetailResponseDTO.builder()
-                .id(entity.getId())
+                .carId(entity.getId())
                 .name(entity.getName())
-                .licensePlate(entity.getLicensePlate())
-                .brand(entity.getModel().getBrand().getName())
-                .model(entity.getModel().getName())
+                .brand(entity.getBrand())
+                .model(entity.getModel())
                 .color(entity.getColor())
                 .numberOfSeats(entity.getNumberOfSeats())
                 .productionYear(entity.getProductionYear())
@@ -66,9 +68,10 @@ public class CarMapperImpl implements CarMapper {
                 .termOfUse(entity.getTermsOfUse())
                 .createdAt(entity.getCreatedAt().toString())
                 .updatedAt(entity.getUpdatedAt().toString())
-                .basePrice(entity.getBasePrice().toString())
-                .carStatus(entity.getCarStatus())
+                .basePrice(entity.getBasePrice().toBigInteger())
+                .status(entity.getStatus())
                 .rating(entity.getRating())
+                .bookingCount(bookingRepo.countCompletedBookingsByCarId(entity.getId()))
                 .carOwner(userMapper.toUserDetailResponseDTO(entity.getCarOwner()))
                 .images(imageList)
                 .build();
@@ -80,11 +83,11 @@ public class CarMapperImpl implements CarMapper {
                 .map(imageMapper::toImageResponseDTO)
                 .toList();
         return CarDetailResponseForOwnerDTO.builder()
-                .id(entity.getId())
+                .carId(entity.getId())
                 .name(entity.getName())
                 .licensePlate(entity.getLicensePlate())
-                .brand(entity.getModel().getBrand().getName())
-                .model(entity.getModel().getName())
+                .brand(entity.getBrand())
+                .model(entity.getModel())
                 .color(entity.getColor())
                 .numberOfSeats(entity.getNumberOfSeats())
                 .productionYear(entity.getProductionYear())
@@ -98,8 +101,8 @@ public class CarMapperImpl implements CarMapper {
                 .termOfUse(entity.getTermsOfUse())
                 .createdAt(entity.getCreatedAt().toString())
                 .updatedAt(entity.getUpdatedAt().toString())
-                .basePrice(entity.getBasePrice().toString())
-                .carStatus(entity.getCarStatus())
+                .basePrice(entity.getBasePrice().toBigInteger().toString())
+                .carStatus(entity.getStatus())
                 .rating(entity.getRating())
                 .carOwner(userMapper.toUserDetailResponseDTO(entity.getCarOwner()))
                 .images(imageList)
@@ -112,7 +115,9 @@ public class CarMapperImpl implements CarMapper {
         return Car.builder()
                 .name(requestDTO.name())
                 .licensePlate(requestDTO.licensePlate())
-                .model(carModelRepo.findById(requestDTO.modelId()).orElse(null))
+//                .model(carModelRepo.findById(requestDTO.modelId()).orElse(null))
+                .brand(requestDTO.brand())
+                .model(requestDTO.model())
                 .color(requestDTO.color())
                 .numberOfSeats(requestDTO.numberOfSeats())
                 .productionYear(requestDTO.productionYear())
@@ -124,8 +129,15 @@ public class CarMapperImpl implements CarMapper {
                 .description(requestDTO.description())
                 .additionalFunctions(requestDTO.additionalFunctions())
                 .termsOfUse(requestDTO.termOfUse())
-                .basePrice(new BigDecimal(requestDTO.basePrice()))
-                .carStatus(ECarStatus.UNVERIFIED)
+                .basePrice(new BigDecimal(requestDTO.basePrice()).multiply(new BigDecimal(1000)))
+                .quickRent(requestDTO.quickRent())
+                .maxDeliveryDistance(requestDTO.maxDeliveryDistance())
+                .deliveryFee(requestDTO.deliveryFee() * 1000)
+                .freeDeliveryDistance(requestDTO.freeDeliveryDistance())
+                .kmPerDay(requestDTO.kmPerDay())
+                .kmOverDayFee(requestDTO.kmOverDayFee() * 1000)
+                .discountPerWeek(requestDTO.discountPerWeek())
+                .status(ECarStatus.ACTIVE)
                 .rating(null)
                 .images(new ArrayList<>())
                 .build();

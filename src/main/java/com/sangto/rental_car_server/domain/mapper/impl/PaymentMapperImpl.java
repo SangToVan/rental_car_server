@@ -6,29 +6,29 @@ import com.sangto.rental_car_server.domain.entity.Payment;
 import com.sangto.rental_car_server.domain.mapper.PaymentMapper;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-
 @Component
 public class PaymentMapperImpl implements PaymentMapper {
     @Override
     public Payment addPaymentRequestDTOtoEntity(AddPaymentRequestDTO requestDTO) {
         return Payment.builder()
-                .amount(new BigDecimal(requestDTO.amount()))
                 .paymentMethod(requestDTO.paymentMethod())
-                .paymentStatus(requestDTO.paymentStatus())
-                .bookingId(requestDTO.bookingId())
+                .paymentType(requestDTO.paymentType())
                 .build();
     }
 
     @Override
     public PaymentResponseDTO toPaymentResponseDTO(Payment entity) {
         return PaymentResponseDTO.builder()
+                .paymentId(entity.getId())
                 .amount(entity.getAmount().toString())
                 .paymentMethod(entity.getPaymentMethod())
                 .paymentStatus(entity.getPaymentStatus())
+                .paymentType(entity.getPaymentType())
+                .transactionCode(entity.getTransactionCode())
+                .paymentUrl("")
                 .createdAt(entity.getCreatedAt().toString())
                 .updatedAt(entity.getUpdatedAt().toString())
-                .bookingId(entity.getBookingId())
+                .bookingId(entity.getBooking().getId())
                 .build();
     }
 }

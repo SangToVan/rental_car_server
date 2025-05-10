@@ -12,7 +12,6 @@ public class EscrowTransactionMapperImpl implements EscrowTransactionMapper {
     @Override
     public EscrowTransaction toEscrowTransaction(AddEscrowTransactionRequestDTO requestDTO) {
         return EscrowTransaction.builder()
-                .bookingId(requestDTO.bookingId())
                 .amount(requestDTO.amount())
                 .status(requestDTO.status())
                 .build();
@@ -21,7 +20,7 @@ public class EscrowTransactionMapperImpl implements EscrowTransactionMapper {
     @Override
     public EscrowTransactionResponseDTO toEscrowTransactionResponseDTO(EscrowTransaction entity) {
         return EscrowTransactionResponseDTO.builder()
-                .bookingId(entity.getBookingId())
+                .bookingId(entity.getBooking().getId())
                 .amount(entity.getAmount().toString())
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt().toString())

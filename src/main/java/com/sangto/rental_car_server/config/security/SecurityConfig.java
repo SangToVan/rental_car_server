@@ -16,6 +16,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -28,8 +30,11 @@ public class SecurityConfig {
             "/api-docs" + CATCH_ALL_WILDCARDS,
             "/swagger-ui" + CATCH_ALL_WILDCARDS,
             "/v3/api-docs" + CATCH_ALL_WILDCARDS,
+            Endpoint.V1.Home.BASE + CATCH_ALL_WILDCARDS,
+            Endpoint.V1.Payment.VNPAY_RETURN,
             Endpoint.V1.Admin.BASE + CATCH_ALL_WILDCARDS,
             Endpoint.V1.Auth.BASE + CATCH_ALL_WILDCARDS,
+            Endpoint.V1.Feedback.BASE + CATCH_ALL_WILDCARDS,
             Endpoint.V1.Car.BASE,
             Endpoint.V1.Car.DETAILS,
     };
@@ -54,7 +59,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://localhost:3000");
+        config.setAllowedOriginPatterns(List.of("*")); // ✅ Cho phép mọi domain nếu dùng allowCredentials
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

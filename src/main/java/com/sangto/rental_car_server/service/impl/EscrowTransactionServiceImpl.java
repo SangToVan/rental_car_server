@@ -44,34 +44,9 @@ public class EscrowTransactionServiceImpl implements EscrowTransactionService {
 
         Optional<Booking> findBooking = bookingRepo.findById(requestDTO.bookingId());
         if (findBooking.isEmpty()) throw new AppException("Booking not found");
-        Booking booking = findBooking.get();
-
-        // calculate rental fee
-        Optional<User> findCustomer = userRepo.findById(booking.getUser().getId());
-        if (findCustomer.isEmpty()) throw new AppException("Customer not found");
-        User customer = findCustomer.get();
-
-        Optional<User> findAdmin = userRepo.findAdmin(EUserRole.ADMIN);
-        if (findAdmin.isEmpty()) throw new AppException("Admin not found");
-        User admin = findAdmin.get();
-
-        walletService.debitWallet(customer.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                        .transactionType(ETransactionType.PAYMENT)
-                        .amount(booking.getTotalPrice().toString())
-                        .description("Payment for booking " + booking.getId())
-                        .walletId(customer.getWallet().getId())
-                .build());
-
-        walletService.creditWallet(admin.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                .transactionType(ETransactionType.PAYMENT)
-                .amount(booking.getTotalPrice().toString())
-                .description("Escrow payment for booking " + booking.getId())
-                .walletId(admin.getWallet().getId())
-                .build());
 
         EscrowTransaction newEscrowTransaction = escrowTransactionMapper.toEscrowTransaction(requestDTO);
+        newEscrowTransaction.setBooking(findBooking.get());
         newEscrowTransaction.setCreatedAt(LocalDateTime.now());
         newEscrowTransaction.setUpdatedAt(LocalDateTime.now());
         escrowTransactionRepo.save(newEscrowTransaction);
@@ -88,17 +63,10 @@ public class EscrowTransactionServiceImpl implements EscrowTransactionService {
 
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("Booking not found");
+
         Optional<EscrowTransaction> findEscrowTransaction = escrowTransactionRepo.findByBookingId(bookingId);
         if (findEscrowTransaction.isEmpty()) throw new AppException("Escrow transaction not found");
         EscrowTransaction escrowTransaction = findEscrowTransaction.get();
-
-        if (status.equals(EscrowStatus.REFUNDED)) {
-            refundEscrow(findBooking.get());
-        } else if (status.equals(EscrowStatus.RELEASED)) {
-            releaseEscrow(findBooking.get());
-        } else {
-            throw new AppException("Cannot update escrow status " + status);
-        }
 
         escrowTransaction.setStatus(status);
         escrowTransaction.setUpdatedAt(LocalDateTime.now());
@@ -120,60 +88,5 @@ public class EscrowTransactionServiceImpl implements EscrowTransactionService {
                 "Get list escrow transaction successfully",
                 responseDTOList
         );
-    }
-    @Transactional
-    public void refundEscrow(Booking booking) {
-        // calculate rental fee
-        Optional<User> findCustomer = userRepo.findById(booking.getUser().getId());
-        if (findCustomer.isEmpty()) throw new AppException("Customer not found");
-        User customer = findCustomer.get();
-
-        Optional<User> findAdmin = userRepo.findAdmin(EUserRole.ADMIN);
-        if (findAdmin.isEmpty()) throw new AppException("Admin not found");
-        User admin = findAdmin.get();
-
-        walletService.creditWallet(customer.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                .transactionType(ETransactionType.REFUND)
-                .amount(booking.getTotalPrice().toString())
-                .description("Refund for booking " + booking.getId())
-                .walletId(customer.getWallet().getId())
-                .build());
-
-        walletService.debitWallet(admin.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                .transactionType(ETransactionType.REFUND)
-                .amount(booking.getTotalPrice().toString())
-                .description("Escrow refund for booking " + booking.getId())
-                .walletId(admin.getWallet().getId())
-                .build());
-    }
-
-    @Transactional
-    public void releaseEscrow(Booking booking) {
-        // calculate rental fee
-        Optional<User> findOwner = userRepo.findById(booking.getCar().getCarOwner().getId());
-        if (findOwner.isEmpty()) throw new AppException("Owner not found");
-        User owner = findOwner.get();
-
-        Optional<User> findAdmin = userRepo.findAdmin(EUserRole.ADMIN);
-        if (findAdmin.isEmpty()) throw new AppException("Admin not found");
-        User admin = findAdmin.get();
-
-        walletService.creditWallet(owner.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                .transactionType(ETransactionType.RELEASE)
-                .amount(booking.getTotalPrice().toString())
-                .description("Release for booking " + booking.getId())
-                .walletId(owner.getWallet().getId())
-                .build());
-
-        walletService.debitWallet(admin.getWallet().getId(), booking.getTotalPrice());
-        transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                .transactionType(ETransactionType.RELEASE)
-                .amount(booking.getTotalPrice().toString())
-                .description("Escrow release for booking " + booking.getId())
-                .walletId(admin.getWallet().getId())
-                .build());
     }
 }

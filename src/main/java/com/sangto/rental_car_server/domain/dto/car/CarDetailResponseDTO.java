@@ -7,13 +7,13 @@ import com.sangto.rental_car_server.domain.enums.ECarTransmission;
 import com.sangto.rental_car_server.domain.enums.EFuelType;
 import lombok.Builder;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Builder
 public record CarDetailResponseDTO(
-        Integer id,
+        Integer carId,
         String name,
-        String licensePlate,
         String brand,
         String model,
         String color,
@@ -29,9 +29,10 @@ public record CarDetailResponseDTO(
         String termOfUse,
         String createdAt,
         String updatedAt,
-        String basePrice,
-        ECarStatus carStatus,
+        BigInteger basePrice,
+        ECarStatus status,
         Double rating,
+        Integer bookingCount,
         List<ImageResponseDTO> images,
         UserDetailResponseDTO carOwner
 ) {

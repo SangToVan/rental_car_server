@@ -2,46 +2,45 @@ package com.sangto.rental_car_server.config.payment;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Configuration
+@Component
+@Getter
 public class VNPayConfig {
 
-    @Getter
-    @Value("${payment.vnPay.url}")
-    private String vnp_PayUrl;
+    @Value("${payment.vnpay.tmnCode}")
+    private String tmnCode;
 
-    @Value("${payment.vnPay.returnUrl}")
-    private String vnp_ReturnUrl;
-
-    @Value("${payment.vnPay.tmnCode}")
-    private String vnp_TmnCode ;
-
-    @Getter
-    @Value("${payment.vnPay.secretKey}")
+    @Value("${payment.vnpay.secretKey}")
     private String secretKey;
 
-    @Value("${payment.vnPay.version}")
-    private String vnp_Version;
+    @Value("${payment.vnpay.returnUrl}")
+    private String returnUrl;
 
-    @Value("${payment.vnPay.command}")
-    private String vnp_Command;
+    @Value("${payment.vnpay.vnpUrl}")
+    private String vnpUrl;
 
-    @Value("${payment.vnPay.orderType}")
+    @Value("${payment.vnpay.version}")
+    private String version;
+
+    @Value("${payment.vnpay.command}")
+    private String command;
+
+    @Value("${payment.vnpay.orderType}")
     private String orderType;
 
     public Map<String, String> getConfig() {
         Map<String, String> vnpParamsMap = new HashMap<>();
-        vnpParamsMap.put("vnp_Version", this.vnp_Version);
-        vnpParamsMap.put("vnp_Command", this.vnp_Command);
-        vnpParamsMap.put("vnp_TmnCode", this.vnp_TmnCode);
+        vnpParamsMap.put("vnp_Version", this.version);
+        vnpParamsMap.put("vnp_Command", this.command);
+        vnpParamsMap.put("vnp_TmnCode", this.tmnCode);
         vnpParamsMap.put("vnp_CurrCode", "VND");
         vnpParamsMap.put("vnp_OrderType", this.orderType);
         vnpParamsMap.put("vnp_Locale", "vn");
-        vnpParamsMap.put("vnp_ReturnUrl", this.vnp_ReturnUrl);
+        vnpParamsMap.put("vnp_ReturnUrl", this.returnUrl);
         return vnpParamsMap;
     }
 }

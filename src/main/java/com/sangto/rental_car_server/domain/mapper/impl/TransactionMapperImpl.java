@@ -16,7 +16,7 @@ public class TransactionMapperImpl implements TransactionMapper {
     public Transaction toTransactionEntity(AddTransactionRequestDTO requestDTO) {
         return Transaction.builder()
                 .transactionType(requestDTO.transactionType())
-                .amount(new BigDecimal(requestDTO.amount()))
+                .amount(requestDTO.amount())
                 .description(requestDTO.description())
                 .transactionDate(LocalDateTime.now())
                 .build();

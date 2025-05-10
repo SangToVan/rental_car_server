@@ -29,8 +29,9 @@ public class Image {
 
     private String imagePublicId;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @Builder.Default
+    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
     private LocalDate createdAt = LocalDate.now();
 
     @ManyToOne(targetEntity = Car.class, fetch = FetchType.LAZY)

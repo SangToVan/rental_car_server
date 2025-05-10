@@ -14,6 +14,8 @@ public interface UserService {
 
     void initializeAdmin();
 
+    void initializeSystem();
+
     Response<UserDetailResponseDTO> getDetailUser(Integer id);
 
     Response<LoginResponseDTO> addUser(AddUserRequestDTO requestDTO) throws IOException;

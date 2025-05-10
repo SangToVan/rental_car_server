@@ -5,10 +5,13 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum ECarTransmission {
-    AUTOMATIC("Automatic"),
-    MANUAL("Manual"),
-    SEMI_AUTOMATIC("Semi-Automatic");
+public enum EPaymentType {
+
+    DEPOSIT("Deposit"),
+    FULL("Full"),
+    REMAINING("Remaining"),
+    REFUND("Refund"),
+    RELEASE("Release");
 
     private final String title;
 }

@@ -3,6 +3,7 @@ package com.sangto.rental_car_server.domain.entity;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sangto.rental_car_server.domain.enums.EPaymentMethod;
 import com.sangto.rental_car_server.domain.enums.EPaymentStatus;
+import com.sangto.rental_car_server.domain.enums.EPaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,29 +27,46 @@ public class Payment {
     @Column(name = "payment_id")
     private Integer id;
 
-    private BigDecimal amount;
+    private BigDecimal amount; // Số tiền thanh toán
 
     @Enumerated(EnumType.STRING)
-    private EPaymentMethod paymentMethod;
+    private EPaymentMethod paymentMethod; // WALLET, VNPAY
 
     @Enumerated(EnumType.STRING)
-    private EPaymentStatus paymentStatus;
+    private EPaymentStatus paymentStatus; // PENDING, SUCCESS, FAILED, EXPIRED
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
+    @Enumerated(EnumType.STRING)
+    private EPaymentType paymentType; // FULL, DEPOSIT (40%), REMAINING
+
+    private String transactionCode; // Mã giao dịch VNPay, mã Wallet nội bộ
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
-    private LocalDateTime expiredAt = createdAt.plusMinutes(60L);
+    private LocalDateTime expiredAt;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd HH:mm:ss")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm:ss")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
-    private Integer bookingId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 
-    @ManyToOne(targetEntity = User.class, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
+        expiredAt = createdAt.plusMinutes(60);
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }
+

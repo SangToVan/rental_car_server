@@ -6,10 +6,13 @@ import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
+import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
+import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -28,7 +31,7 @@ public interface BookingService {
 
     Response<BookingDetailResponseDTO> addBooking(Integer userId, AddBookingRequestDTO requestDTO) throws MessagingException;
 
-    Response<String> paymentBooking(Integer bookingId, Integer userId);
+    Response<PaymentResponseDTO> paymentBooking(Integer bookingId, Integer userId, AddPaymentRequestDTO requestDTO, HttpServletRequest request) throws MessagingException;
 
     Response<String> confirmBooking(Integer bookingId, Integer userId) throws MessagingException;
 
@@ -39,5 +42,11 @@ public interface BookingService {
     Response<String> completeBooking(Integer bookingId);
 
     Response<String> cancelBooking(Integer bookingId, Integer userId) throws MessagingException;
+
+    Response<String> customerCancelBooking(Integer bookingId, Integer userId) throws MessagingException;
+
+    Response<String> ownerCancelBooking(Integer bookingId, Integer userId) throws MessagingException;
+
+    Response<String> adminCancelBooking(Integer bookingId) throws MessagingException;
 
 }

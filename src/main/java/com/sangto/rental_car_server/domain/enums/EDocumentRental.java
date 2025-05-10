@@ -5,10 +5,11 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum ECarTransmission {
-    AUTOMATIC("Automatic"),
-    MANUAL("Manual"),
-    SEMI_AUTOMATIC("Semi-Automatic");
+public enum EDocumentRental {
+    NATIVE("Công dân Việt Nam"),
+    FOREIGNER("Người nước ngoài"),
+    NONE("Không có bằng lái");
+
 
     private final String title;
 }

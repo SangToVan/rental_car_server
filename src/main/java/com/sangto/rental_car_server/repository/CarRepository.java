@@ -20,14 +20,26 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
             + " WHERE co.id = :ownerId ")
     Page<Car> getListCarByOwner(@Param("ownerId") Integer ownerId, Pageable pageable);
 
+//    @Query("""
+//    SELECT DISTINCT c FROM Car c
+//    JOIN FETCH c.carOwner co
+//    LEFT JOIN FETCH c.model m
+//    LEFT JOIN FETCH m.brand b
+//    LEFT JOIN FETCH c.images i
+//    WHERE co.paymentId = :ownerId
+//    AND CONCAT(c.name, ' ', m.name, ' ', b.name, ' ' , c.address) LIKE %:keyword%
+//""")
+//    Page<Car> getListCarByOwnerWithKeyword(
+//            @Param("ownerId") Integer ownerId,
+//            @Param("keyword") String keyword,
+//            Pageable pageable);
+
     @Query("""
     SELECT DISTINCT c FROM Car c
     JOIN FETCH c.carOwner co
-    LEFT JOIN FETCH c.model m
-    LEFT JOIN FETCH m.brand b
     LEFT JOIN FETCH c.images i
     WHERE co.id = :ownerId
-    AND CONCAT(c.name, ' ', m.name, ' ', b.name, ' ' , c.address) LIKE %:keyword%
+    AND CONCAT(c.name, ' ', c.brand, ' ', c.model, ' ' , c.address) LIKE %:keyword%
 """)
     Page<Car> getListCarByOwnerWithKeyword(
             @Param("ownerId") Integer ownerId,
@@ -77,11 +89,14 @@ public interface CarRepository extends JpaRepository<Car, Integer> {
 
     List<Car> findAllByCarOwnerId(Integer ownerId);
 
-    int countByModel(CarModel model);
+//    int countByModel(CarModel model);
+//
+//    @Query("SELECT c.model.brand, COUNT(c) FROM Car c GROUP BY c.model.brand")
+//    List<Object[]> countCarsByBrand();
+//
+//    @Query("SELECT c.model, COUNT(c) FROM Car c GROUP BY c.model")
+//    List<Object[]> countCarsByModel();
 
-    @Query("SELECT c.model.brand, COUNT(c) FROM Car c GROUP BY c.model.brand")
-    List<Object[]> countCarsByBrand();
-
-    @Query("SELECT c.model, COUNT(c) FROM Car c GROUP BY c.model")
-    List<Object[]> countCarsByModel();
+    @Query(value = "SELECT * FROM cars ORDER BY rating DESC LIMIT 8", nativeQuery = true)
+    List<Car> findTop8CarsByRating();
 }

@@ -3,8 +3,10 @@ package com.sangto.rental_car_server.service.impl;
 import com.sangto.rental_car_server.domain.dto.transaction.AddTransactionRequestDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.UpdWalletDTO;
 import com.sangto.rental_car_server.domain.dto.wallet.WalletResponseDTO;
+import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.entity.Wallet;
 import com.sangto.rental_car_server.domain.enums.ETransactionType;
+import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.mapper.WalletMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.UserRepository;
@@ -53,16 +55,16 @@ public class WalletServiceImpl implements WalletService {
         if (updWalletDTO.type().equals(ETransactionType.TOP_UP)) {
             creditWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
             transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                            .transactionType(ETransactionType.TOP_UP)
-                            .amount(updWalletDTO.amount())
+                            .transactionType(ETransactionType.CREDIT)
+                            .amount(new BigDecimal(updWalletDTO.amount()))
                             .description("Top up transaction")
                             .walletId(wallet.getId())
                     .build());
         } else if (updWalletDTO.type().equals(ETransactionType.WITHDRAW)) {
             debitWallet(wallet.getId(), new BigDecimal(updWalletDTO.amount()));
             transactionService.addTransaction(AddTransactionRequestDTO.builder()
-                    .transactionType(ETransactionType.WITHDRAW)
-                    .amount(updWalletDTO.amount())
+                    .transactionType(ETransactionType.DEBIT)
+                    .amount(new BigDecimal(updWalletDTO.amount()))
                     .description("Withdraw transaction")
                     .walletId(wallet.getId())
                     .build());
@@ -122,5 +124,120 @@ public class WalletServiceImpl implements WalletService {
         walletRepo.save(toWallet);
 
         return Response.successfulResponse("Transfer wallet successfully");
+    }
+
+    @Override
+    @Transactional
+    public Response<String> paymentBooking(Integer customerId, BigDecimal amount, Integer bookingId) {
+
+        Optional<Wallet> findWallet = userRepo.findWalletById(customerId);
+        if (findWallet.isEmpty()) throw new AppException("Wallet not found");
+        Wallet customerWallet = findWallet.get();
+
+        Optional<User> findSystem = userRepo.findFirstByRole(EUserRole.SYSTEM);
+        if (findSystem.isEmpty()) throw new AppException("System not found");
+        Wallet systemWallet = findSystem.get().getWallet();
+
+        try {
+            debitWallet(customerWallet.getId(), amount);
+            creditWallet(systemWallet.getId(), amount);
+        } catch (AppException e) {
+            throw new AppException(e.getMessage());
+        }
+
+        AddTransactionRequestDTO customerRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.DEBIT)
+                .walletId(customerWallet.getId())
+                .amount(amount)
+                .description("Payment for booking" + bookingId)
+                .build();
+
+        AddTransactionRequestDTO systemRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.CREDIT)
+                .walletId(systemWallet.getId())
+                .amount(amount)
+                .description("Customer payment for booking" + bookingId)
+                .build();
+
+        transactionService.addTransaction(customerRequest);
+        transactionService.addTransaction(systemRequest);
+
+        return Response.successfulResponse("Payment booking successfully");
+    }
+
+    @Override
+    @Transactional
+    public Response<String> releaseBooking(Integer ownerId, BigDecimal amount, Integer bookingId) {
+        Optional<Wallet> findWallet = userRepo.findWalletById(ownerId);
+        if (findWallet.isEmpty()) throw new AppException("Wallet not found");
+        Wallet ownerWallet = findWallet.get();
+
+        Optional<User> findSystem = userRepo.findFirstByRole(EUserRole.SYSTEM);
+        if (findSystem.isEmpty()) throw new AppException("System not found");
+        Wallet systemWallet = findSystem.get().getWallet();
+
+        try {
+            debitWallet(systemWallet.getId(), amount);
+            creditWallet(ownerWallet.getId(), amount);
+        } catch (AppException e) {
+            throw new AppException(e.getMessage());
+        }
+
+        AddTransactionRequestDTO ownerRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.CREDIT)
+                .walletId(ownerWallet.getId())
+                .amount(amount)
+                .description("Payment release for booking" + bookingId)
+                .build();
+
+        AddTransactionRequestDTO systemRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.DEBIT)
+                .walletId(systemWallet.getId())
+                .amount(amount)
+                .description("Release payment for booking" + bookingId)
+                .build();
+
+        transactionService.addTransaction(ownerRequest);
+        transactionService.addTransaction(systemRequest);
+
+        return Response.successfulResponse("Release booking payment successfully");
+    }
+
+    @Override
+    @Transactional
+    public Response<String> refundBooking(Integer customerId, BigDecimal amount, Integer bookingId) {
+        Optional<Wallet> findWallet = userRepo.findWalletById(customerId);
+        if (findWallet.isEmpty()) throw new AppException("Wallet not found");
+        Wallet customerWallet = findWallet.get();
+
+        Optional<User> findSystem = userRepo.findFirstByRole(EUserRole.SYSTEM);
+        if (findSystem.isEmpty()) throw new AppException("System not found");
+        Wallet systemWallet = findSystem.get().getWallet();
+
+        try {
+            creditWallet(customerWallet.getId(), amount);
+            debitWallet(systemWallet.getId(), amount);
+        } catch (AppException e) {
+            throw new AppException(e.getMessage());
+        }
+
+        AddTransactionRequestDTO customerRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.CREDIT)
+                .walletId(customerWallet.getId())
+                .amount(amount)
+                .description("Payment refund for booking" + bookingId)
+                .build();
+
+        AddTransactionRequestDTO systemRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.DEBIT)
+                .walletId(systemWallet.getId())
+                .amount(amount)
+                .description("Refund payment for booking" + bookingId)
+                .build();
+
+        transactionService.addTransaction(customerRequest);
+        transactionService.addTransaction(systemRequest);
+
+        return Response.successfulResponse("Refund booking payment successfully");
     }
 }

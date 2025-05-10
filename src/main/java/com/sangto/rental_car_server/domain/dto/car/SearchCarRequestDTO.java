@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @RentalTimeMatching(startTime = "startTime", endTime = "endTime")
 public record SearchCarRequestDTO(
-        @RequestParam(name = "address") String address,
+        @RequestParam(name = "address")
+        @NotBlank(message = "Địa chỉ không được để trống")
+        String address,
         @RequestParam(name = "startTime")
         @NotBlank(message = "The start rental time is not blank")
         @AfterNowTime(message = "The start rental time is after now")

@@ -45,4 +45,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.startDateTime BETWEEN :startOfMonth AND :endOfMonth")
     int countBookingsInMonth(@Param("startOfMonth") LocalDateTime startOfMonth, @Param("endOfMonth") LocalDateTime endOfMonth);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND b.status = 'COMPLETED'")
+    int countCompletedBookingsByCarId(@Param("carId") Integer carId);
 }
