@@ -18,8 +18,50 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c " + "JOIN FETCH b.user u " + "WHERE u.id = :userId")
     Page<Booking> getListBookingByUserId(@Param("userId") Integer userId, Pageable pageable);
 
+    @Query("SELECT b FROM Booking b " +
+            "JOIN FETCH b.car c " +
+            "JOIN FETCH b.user u " +
+            "WHERE u.id = :userId " +
+            "AND (b.status = 'PENDING' OR b.status = 'PAID' OR b.status = 'CONFIRMED' OR b.status = 'IN_PROGRESS')")
+    Page<Booking> getUnfinishedBookingsByUserId(@Param("userId") Integer userId, Pageable pageable);
+
+    @Query("SELECT b FROM Booking b " +
+            "JOIN FETCH b.car c " +
+            "JOIN FETCH b.user u " +
+            "ORDER BY b.bookingDate DESC")
+    List<Booking> getAllBookings();
+
+    @Query("SELECT b FROM Booking b " +
+            "JOIN FETCH b.car c " +
+            "JOIN FETCH b.user u " +
+            "WHERE b.status = 'PENDING' OR b.status = 'PAID' OR b.status = 'CONFIRMED' OR b.status = 'IN_PROGRESS' " +
+            "ORDER BY b.bookingDate DESC")
+    List<Booking> getUnfinishedBookings();
+
+    @Query("SELECT b FROM Booking b " +
+            "JOIN FETCH b.car c " +
+            "JOIN FETCH b.user u " +
+            "WHERE u.id = :userId " +
+            "AND (b.status = 'COMPLETED' OR b.status = 'RETURNED' OR b.status = 'CANCELLED')")
+    Page<Booking> getFinishedBookingsByUserId(@Param("userId") Integer userId, Pageable pageable);
+
+    @Query("SELECT b FROM Booking b " +
+            "JOIN FETCH b.car c " +
+            "JOIN FETCH b.user u " +
+            "WHERE b.status = 'COMPLETED' OR b.status = 'RETURNED' OR b.status = 'CANCELLED' " +
+            "ORDER BY b.bookingDate DESC")
+    List<Booking> getFinishedBookings();
+
     @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c " + "JOIN FETCH b.user u " + "WHERE c.id = :carId")
     Page<Booking> getListBookingByCarId(@Param("carId") Integer carId, Pageable pageable);
+
+    @Query("SELECT b FROM Booking b " +
+            "WHERE b.car.id = :carId " +
+            "AND b.status = :status " +
+            "ORDER BY b.bookingDate DESC")
+    Page<Booking> getListBookingByCarIdAndStatusOrderByBookingDateDesc(
+            @Param("carId") Integer carId,
+            @Param("status") EBookingStatus status, Pageable pageable);
 
     @Query("SELECT b FROM Booking b " + "JOIN FETCH b.car c "
             + "JOIN FETCH b.user u "
@@ -48,4 +90,11 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND b.status = 'COMPLETED'")
     int countCompletedBookingsByCarId(@Param("carId") Integer carId);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND (b.status = 'PENDING' OR b.status = 'PAID')")
+    int countPendingBookingsByCarId(@Param("carId") Integer carId);
+
+    @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND (b.status = 'CONFIRMED' OR b.status = 'IN_PROGRESS' OR b.status = 'RETURNED')")
+    int countInProgressBookingsByCarId(@Param("carId") Integer carId);
+
 }

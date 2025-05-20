@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u WHERE u.role = :role")
     List<User> findByRole(@Param("role") EUserRole role);
 
+    List<User> findByRoleNotIn(List<EUserRole> excludedRoles);
+
     @Query("SELECT u FROM User u WHERE u.role = :role")
     Optional<User> findAdmin(@Param("role") EUserRole role);
 

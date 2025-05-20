@@ -78,8 +78,6 @@ public class VNPayServiceImpl implements VNPayService {
         return vnpayConfig.getVnpUrl() + "?" + queryString;
     }
 
-
-
     @Override
     public boolean validateSignature(Map<String, String> vnpParams, String receivedHash) {
         Map<String, String> filteredParams = vnpParams.entrySet().stream()

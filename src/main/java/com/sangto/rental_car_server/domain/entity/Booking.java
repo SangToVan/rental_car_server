@@ -37,6 +37,11 @@ public class Booking {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATETIME_FORMAT)
     private LocalDateTime endDateTime;
 
+    @Builder.Default
+    @DateTimeFormat(pattern = TimeFormatConstant.DATETIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = TimeFormatConstant.DATETIME_FORMAT)
+    private LocalDateTime bookingDate = LocalDateTime.now();
+
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice;
 
@@ -45,7 +50,7 @@ public class Booking {
     private BigDecimal rentalFee;
 
     public BigDecimal getRentalFee() {
-        return RentalCalculateUtil.calculateRentalFee(this.startDateTime, this.endDateTime, this.car.getBasePrice());
+        return RentalCalculateUtil.calculateTotalFee(this.startDateTime, this.endDateTime, this.car.getBasePrice());
     }
 
     @Transient

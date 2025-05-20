@@ -65,8 +65,9 @@ public class UserMapperImpl implements UserMapper {
                 .email(entity.getEmail())
                 .role(entity.getRole())
                 .phoneNumber(entity.getPhoneNumber())
+                .citizenId(entity.getCitizenId())
                 .avatar(entity.getAvatar())
-                .isActive(entity.isActive())
+                .createdAt(entity.getCreatedAt().toString())
                 .balance(entity.getWallet().getBalance().toString())
                 .build();
     }
@@ -81,6 +82,8 @@ public class UserMapperImpl implements UserMapper {
                 .phoneNumber(requestDTO.phoneNumber())
                 .address(null)
                 .drivingLicense(null)
+                .avatar("http://res.cloudinary.com/dnhxdubzr/image/upload/v1746981726/avatar/8bdf825bcf30d0a59acb315f84baeca9.png")
+                .avatarPublicId("avatar/8bdf825bcf30d0a59acb315f84baeca9")
                 .isActive(true)
                 .wallet(new Wallet())
                 .build();

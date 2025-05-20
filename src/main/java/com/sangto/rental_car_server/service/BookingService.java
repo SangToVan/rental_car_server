@@ -9,6 +9,7 @@ import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
 import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
+import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import jakarta.mail.MessagingException;
@@ -25,7 +26,13 @@ public interface BookingService {
 
     MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getAllBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId);
 
+    MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getUnfinishedBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId);
+
+    MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getFinishedBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId);
+
     MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCar(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId);
+
+    MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCarByStatus(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId, EBookingStatus status);
 
     Response<BookingDetailResponseDTO> getBookingDetail(Integer bookingId);
 

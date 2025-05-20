@@ -10,6 +10,7 @@ public record BookingDetailResponseDTO(
         Integer bookingId,
         CarDetailResponseDTO carDetail,
         UserDetailResponseDTO customerInfo,
+        String bookingDate,
         String startDateTime,
         String endDateTime,
         Long numberOfDays,

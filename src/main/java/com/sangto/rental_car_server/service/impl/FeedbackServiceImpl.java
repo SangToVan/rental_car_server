@@ -126,7 +126,7 @@ public class FeedbackServiceImpl implements FeedbackService {
                 : Sort.by(sortField).descending();
         Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
 
-        Page<Feedback> page = feedbackRepo.getListByCarId(carId, pageable);
+        Page<Feedback> page = feedbackRepo.getPageByCarId(carId, pageable);
 
         List<FeedbackResponseDTO> liRes = page.getContent().stream()
                 .map(feedbackMapper::toFeedbackResponseDTO)

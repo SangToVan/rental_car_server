@@ -47,9 +47,25 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookingForUser(metaRequestDTO,userId));
     }
 
+    @GetMapping(Endpoint.V1.Booking.LIST_UNFINISHED)
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseDTO>>> getListUnFinishedBookingForUser(
+            HttpServletRequest servletRequest, @ParameterObject MetaRequestDTO metaRequestDTO) {
+        Integer userId =
+                Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getUnfinishedBookingForUser(metaRequestDTO,userId));
+    }
+
+    @GetMapping(Endpoint.V1.Booking.LIST_FINISHED)
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseDTO>>> getListFinishedBookingForUser(
+            HttpServletRequest servletRequest, @ParameterObject MetaRequestDTO metaRequestDTO) {
+        Integer userId =
+                Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getFinishedBookingForUser(metaRequestDTO,userId));
+    }
+
     @GetMapping(Endpoint.V1.Booking.DETAILS)
     public ResponseEntity<Response<BookingDetailResponseDTO>> getDetailBooking(
-            @PathVariable(name = "paymentId") Integer bookingId) {
+            @PathVariable(name = "bookingId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingDetail(bookingId));
     }
 
@@ -63,7 +79,7 @@ public class BookingController {
 
     @PatchMapping(Endpoint.V1.Booking.PAYMENT_BOOKING)
     public ResponseEntity<Response<PaymentResponseDTO>> paymentBooking(
-            @PathVariable(name = "paymentId") Integer bookingId,
+            @PathVariable(name = "bookingId") Integer bookingId,
             @RequestBody @Valid AddPaymentRequestDTO requestDTO,
             HttpServletRequest request
     ) throws MessagingException {
@@ -74,31 +90,31 @@ public class BookingController {
 
 
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_BOOKING)
-    public ResponseEntity<Response<String>> confirmBooking(@PathVariable(name = "paymentId") Integer bookingId)
+    public ResponseEntity<Response<String>> confirmBooking(@PathVariable(name = "bookingId") Integer bookingId)
             throws MessagingException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmBooking(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_PICK_UP)
-    public ResponseEntity<Response<String>> confirmPickUp(@PathVariable(name = "paymentId") Integer bookingId) {
+    public ResponseEntity<Response<String>> confirmPickUp(@PathVariable(name = "bookingId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.confirmPickup(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CONFIRM_RETURN)
-    public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "paymentId") Integer bookingId) {
+    public ResponseEntity<Response<String>> confirmReturn(@PathVariable(name = "bookingId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.confirmReturn(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
     @PatchMapping(Endpoint.V1.Booking.COMPLETE_BOOKING)
-    public ResponseEntity<Response<String>> completeBooking(@PathVariable(name = "paymentId") Integer bookingId) {
+    public ResponseEntity<Response<String>> completeBooking(@PathVariable(name = "bookingId") Integer bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.completeBooking(bookingId));
     }
 
     @PatchMapping(Endpoint.V1.Booking.CANCELLED_BOOKING)
-    public ResponseEntity<Response<String>> cancelBooking(@PathVariable(name = "paymentId") Integer bookingId)
+    public ResponseEntity<Response<String>> cancelBooking(@PathVariable(name = "bookingId") Integer bookingId)
             throws MessagingException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(bookingService.cancelBooking(bookingId, AuthUtil.getRequestedUser().getId()));
@@ -106,7 +122,7 @@ public class BookingController {
 
     @PostMapping(Endpoint.V1.Booking.FEEDBACK)
     public ResponseEntity<Response<Feedback>> giveRating(
-            @PathVariable(name = "paymentId") Integer bookingId, @RequestBody @Valid AddFeedbackRequestDTO requestDTO) {
+            @PathVariable(name = "bookingId") Integer bookingId, @RequestBody @Valid AddFeedbackRequestDTO requestDTO) {
         Feedback feedback =
                 feedbackService.addFeedback(AuthUtil.getRequestedUser().getId(), bookingId, requestDTO);
         return ResponseEntity.status(HttpStatus.OK)

@@ -27,7 +27,7 @@ public class Feedback {
     private Integer rating;
 
     @Builder.Default
-    @Column(name = "birthday")
+    @Column(name = "created_at")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy")
     private LocalDate createdAt = LocalDate.now();

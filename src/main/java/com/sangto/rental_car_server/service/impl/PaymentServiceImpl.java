@@ -17,6 +17,7 @@ import com.sangto.rental_car_server.service.EscrowTransactionService;
 import com.sangto.rental_car_server.service.PaymentService;
 import com.sangto.rental_car_server.service.VNPayService;
 import com.sangto.rental_car_server.service.WalletService;
+import com.sangto.rental_car_server.utility.RentalCalculateUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -153,7 +154,13 @@ public class PaymentServiceImpl implements PaymentService {
         Booking booking = bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new AppException("Booking is not exist"));
 
-        BigDecimal payoutAmount = booking.getTotalPaidAmount(); // hoặc áp dụng trừ phí nếu cần
+         // hoặc áp dụng trừ phí nếu cần
+
+        BigDecimal insuranceFee = RentalCalculateUtil.calculateInsuranceFee(booking.getStartDateTime(), booking.getEndDateTime());
+
+        BigDecimal systemFee = RentalCalculateUtil.calculateSystemFee(booking.getTotalPrice(), insuranceFee);
+
+        BigDecimal payoutAmount = booking.getTotalPaidAmount().subtract(insuranceFee);
 
         try {
             walletService.releaseBooking(
@@ -161,6 +168,8 @@ public class PaymentServiceImpl implements PaymentService {
                     payoutAmount,
                     booking.getId()
             );
+            walletService.releaseInsurance(insuranceFee, booking.getId());
+            walletService.releaseSystemFee(booking.getCar().getCarOwner().getId(), systemFee, booking.getId());
         } catch (AppException e) {
             throw new AppException(e.getMessage());
         }

@@ -7,7 +7,6 @@ import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
-import com.sangto.rental_car_server.domain.dto.escrow_transaction.AddEscrowTransactionRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.meta.SortingDTO;
@@ -15,7 +14,6 @@ import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
 import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.Car;
-import com.sangto.rental_car_server.domain.entity.Payment;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.*;
 import com.sangto.rental_car_server.domain.mapper.BookingMapper;
@@ -144,6 +142,70 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getUnfinishedBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId) {
+        Optional<User> findUser = userRepo.findById(userId);
+        if (findUser.isEmpty()) throw new AppException("This user is not existed");
+
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = bookingRepo.getUnfinishedBookingsByUserId(userId, pageable);
+
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseDTO> li = page.getContent().stream()
+                .map(bookingMapper::toBookingResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get list unfinished booking for user successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
+        );
+    }
+
+    @Override
+    public MetaResponse<MetaResponseDTO, List<BookingResponseDTO>> getFinishedBookingForUser(MetaRequestDTO metaRequestDTO, Integer userId) {
+        Optional<User> findUser = userRepo.findById(userId);
+        if (findUser.isEmpty()) throw new AppException("This user is not existed");
+
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = bookingRepo.getFinishedBookingsByUserId(userId, pageable);
+
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseDTO> li = page.getContent().stream()
+                .map(bookingMapper::toBookingResponseDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get list finished booking for user successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
+        );
+    }
+
+    @Override
     public MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCar(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId) {
         carService.verifyCarOwner(ownerId, carId);
 
@@ -154,6 +216,41 @@ public class BookingServiceImpl implements BookingService {
         Page<Booking> page = metaRequestDTO.keyword() == null
                 ? bookingRepo.getListBookingByCarId(carId, pageable)
                 : bookingRepo.getListBookingByUserId(carId, pageable);
+        if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
+        List<BookingResponseForOwnerDTO> li = page.getContent().stream()
+                .map(bookingMapper::toBookingResponseForOwnerDTO)
+                .toList();
+
+        return MetaResponse.successfulResponse(
+                "Get all booking successfully",
+                MetaResponseDTO.builder()
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
+                        .currentPage(metaRequestDTO.currentPage())
+                        .pageSize(metaRequestDTO.pageSize())
+                        .sorting(SortingDTO.builder()
+                                .sortField(metaRequestDTO.sortField())
+                                .sortDir(metaRequestDTO.sortDir())
+                                .build())
+                        .build(),
+                li
+        );
+    }
+
+    @Override
+    public MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCarByStatus(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId, EBookingStatus status) {
+        carService.verifyCarOwner(ownerId, carId);
+
+        Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
+                ? Sort.by(metaRequestDTO.sortField()).ascending()
+                : Sort.by(metaRequestDTO.sortField()).descending();
+        Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
+        Page<Booking> page = null;
+        if(status == null) {
+            page = bookingRepo.getListBookingByCarId(carId, pageable);
+        } else {
+            page = bookingRepo.getListBookingByCarIdAndStatusOrderByBookingDateDesc(carId, status, pageable);
+        }
         if (page.getContent().isEmpty()) throw new AppException("List booking is empty");
         List<BookingResponseForOwnerDTO> li = page.getContent().stream()
                 .map(bookingMapper::toBookingResponseForOwnerDTO)
@@ -230,7 +327,7 @@ public class BookingServiceImpl implements BookingService {
         if (rentalDurationHours <= 0) throw new AppException("Rental duration less than 0");
 
         // calculate rental cost
-        BigDecimal totalRentalCost = RentalCalculateUtil.calculateRentalFee(startDateTime, endDateTime, car.getBasePrice());
+        BigDecimal totalRentalCost = RentalCalculateUtil.calculateTotalFee(startDateTime, endDateTime, car.getBasePrice());
         // Booking
         Booking newBooking = bookingMapper.addBookingRequestDTOtoEntity(requestDTO);
         newBooking.setCar(car);
@@ -274,6 +371,7 @@ public class BookingServiceImpl implements BookingService {
         if (booking.getStatus() == EBookingStatus.PENDING) {
 
             PaymentResponseDTO responseDTO = paymentService.addPayment(booking.getId(), requestDTO, request);
+            booking.setPaymentMethod(requestDTO.paymentMethod());
 
             if (booking.getTotalPaidAmount().compareTo(booking.getTotalPrice()) >= 0) {
                 booking.setStatus(EBookingStatus.PAID);
@@ -349,7 +447,6 @@ public class BookingServiceImpl implements BookingService {
         Optional<Booking> findBooking = bookingRepo.findById(bookingId);
         if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
         Booking booking = findBooking.get();
-        PaymentResponseDTO responseDTO;
         if (booking.getStatus() == EBookingStatus.RETURNED) {
 
             try {

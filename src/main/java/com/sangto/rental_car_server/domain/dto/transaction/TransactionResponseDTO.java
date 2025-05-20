@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.domain.dto.transaction;
 
+import com.sangto.rental_car_server.domain.enums.EPaymentStatus;
 import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import lombok.Builder;
 
@@ -10,7 +11,7 @@ public record TransactionResponseDTO(
         ETransactionType transactionType,
         String amount,
         String description,
-        Integer walletId,
-        String transactionDate
+        String transactionDate,
+        EPaymentStatus status
 ) {
 }

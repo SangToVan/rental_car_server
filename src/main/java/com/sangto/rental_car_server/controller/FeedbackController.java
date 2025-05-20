@@ -29,14 +29,14 @@ public class FeedbackController {
 
     @GetMapping(Endpoint.V1.Feedback.LIST_FOR_CAR)
     public ResponseEntity<MetaResponse<MetaResponseDTO, List<FeedbackResponseDTO>>> getListFeedbackForCar(
-            @PathVariable(name = "paymentId") Integer carId,
+            @PathVariable(name = "feedbackId") Integer carId,
             @ParameterObject MetaRequestDTO metaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(feedbackService.getListFeedbackByCar(carId, metaRequestDTO));
     }
 
     @GetMapping(Endpoint.V1.Feedback.GET_RATING)
-    public ResponseEntity<Response<Map<String, String>>> getRating(@PathVariable(name = "paymentId") Integer carId) {
+    public ResponseEntity<Response<Map<String, String>>> getRating(@PathVariable(name = "feedbackId") Integer carId) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(feedbackService.getRating(carId));
     }

@@ -1,21 +1,24 @@
 package com.sangto.rental_car_server.domain.dto.booking;
 
+import com.sangto.rental_car_server.domain.dto.image.ImageResponseDTO;
 import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import lombok.Builder;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 @Builder
 public record BookingResponseDTO(
         Integer bookingId,
-        Integer carId,
+        EBookingStatus status,
+        List<ImageResponseDTO> images,
         String carName,
-        BigDecimal basePrice,
         String startDateTime,
         String endDateTime,
-        Long numberOfDays,
+        String bookingDate,
         String totalPrice,
-        String rentalFee,
-        EBookingStatus bookingStatus
+        String totalPaidAmount,
+        String needToPayInCash,
+        String ownerAvatar,
+        String ownerName
 ) {
 }

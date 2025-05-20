@@ -2,6 +2,7 @@ package com.sangto.rental_car_server.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.sangto.rental_car_server.domain.enums.EPaymentStatus;
 import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,9 @@ public class Transaction {
 
     @Enumerated(EnumType.STRING)
     private ETransactionType transactionType;
+
+    @Enumerated(EnumType.STRING)
+    private EPaymentStatus status;
 
     @Column(nullable = false)
     private BigDecimal amount;

@@ -10,8 +10,9 @@ public record UserResponseDTO(
         String email,
         EUserRole role,
         String phoneNumber,
+        String citizenId,
         String avatar,
-        boolean isActive,
+        String createdAt,
         String balance
 ) {
 }

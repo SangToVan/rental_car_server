@@ -6,6 +6,7 @@ import com.sangto.rental_car_server.domain.dto.transaction.AddTransactionRequest
 import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.EscrowTransaction;
 import com.sangto.rental_car_server.domain.entity.User;
+import com.sangto.rental_car_server.domain.entity.Wallet;
 import com.sangto.rental_car_server.domain.enums.ETransactionType;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.enums.EscrowStatus;
@@ -45,6 +46,21 @@ public class EscrowTransactionServiceImpl implements EscrowTransactionService {
         Optional<Booking> findBooking = bookingRepo.findById(requestDTO.bookingId());
         if (findBooking.isEmpty()) throw new AppException("Booking not found");
 
+        // find System wallet
+        Optional<User> findSystem = userRepo.findFirstByRole(EUserRole.SYSTEM);
+        if (findSystem.isEmpty()) throw new AppException("System not found");
+        Wallet systemWallet = findSystem.get().getWallet();
+
+        // credit system wallet
+        walletService.creditWallet(systemWallet.getId(), requestDTO.amount());
+        AddTransactionRequestDTO systemRequest = AddTransactionRequestDTO.builder()
+                .transactionType(ETransactionType.CREDIT)
+                .walletId(systemWallet.getId())
+                .amount(requestDTO.amount())
+                .description("Customer payment for booking" + requestDTO.bookingId())
+                .build();
+        transactionService.addTransaction(systemRequest);
+
         EscrowTransaction newEscrowTransaction = escrowTransactionMapper.toEscrowTransaction(requestDTO);
         newEscrowTransaction.setBooking(findBooking.get());
         newEscrowTransaction.setCreatedAt(LocalDateTime.now());
@@ -82,7 +98,8 @@ public class EscrowTransactionServiceImpl implements EscrowTransactionService {
     public Response<List<EscrowTransactionResponseDTO>> getAllEscrowTransactions() {
 
         List<EscrowTransaction> list = escrowTransactionRepo.findAll();
-        List<EscrowTransactionResponseDTO> responseDTOList = list.stream().map(escrowTransactionMapper::toEscrowTransactionResponseDTO).toList();
+        List<EscrowTransactionResponseDTO> responseDTOList = list.stream()
+                .map(escrowTransactionMapper::toEscrowTransactionResponseDTO).toList();
 
         return Response.successfulResponse(
                 "Get list escrow transaction successfully",

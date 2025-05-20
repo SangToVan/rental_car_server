@@ -6,6 +6,7 @@ import com.sangto.rental_car_server.domain.dto.car.*;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.entity.User;
+import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
@@ -21,9 +22,12 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Tag(name = "Cars")
@@ -38,10 +42,21 @@ public class CarController {
 
     @GetMapping(Endpoint.V1.Car.BASE)
     public ResponseEntity<MetaResponse<MetaResponseDTO, List<CarResponseDTO>>> searchCars(
-            @ParameterObject @Valid SearchCarRequestDTO requestDTO, @ParameterObject MetaRequestDTO metaRequestDTO) {
+            @ParameterObject @Valid SearchCarRequestDTO requestDTO,
+            @ParameterObject MetaRequestDTO metaRequestDTO) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(carService.searchCarV2(
-                        requestDTO.address(), requestDTO.startTime(), requestDTO.endTime(), metaRequestDTO));
+                        requestDTO.address(),
+                        requestDTO.startTime(),
+                        requestDTO.endTime(),
+                        requestDTO.brand(),
+                        requestDTO.numberOfSeats(),
+                        requestDTO.transmission(),
+                        requestDTO.fuelType(),
+                        requestDTO.minPrice(),
+                        requestDTO.maxPrice(),
+                        metaRequestDTO
+                ));
     }
 
     @PostMapping(Endpoint.V1.Car.BASE)
@@ -53,7 +68,7 @@ public class CarController {
     }
 
     @GetMapping(Endpoint.V1.Car.GET_LIST_FOR_OWNER)
-    public ResponseEntity<MetaResponse<MetaResponseDTO, List<CarResponseDTO>>> getListCarForOwner(
+    public ResponseEntity<MetaResponse<MetaResponseDTO, List<CarResponseForOwnerDTO>>> getListCarForOwner(
             HttpServletRequest servletRequest, @ParameterObject MetaRequestDTO requestDTO) {
         Integer ownerId =
                 Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
@@ -61,24 +76,59 @@ public class CarController {
     }
 
     @GetMapping(Endpoint.V1.Car.DETAILS)
-    public ResponseEntity<Response<CarDetailResponseDTO>> getCarDetail(@PathVariable(name = "paymentId") Integer id) {
-        return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetail(id));
+    public ResponseEntity<Response<CarDetailResponseForBookingDTO>> getCarDetail(
+            @PathVariable(name = "carId") Integer id,
+            @RequestParam(name = "startDateTime", required = false) String startDateTimeStr,
+            @RequestParam(name = "endDateTime", required = false) String endDateTimeStr) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Integer userId = null;
+
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            User user = (User) auth.getPrincipal();
+            userId = user.getId();
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetailForBooking(id, userId, startDateTimeStr, endDateTimeStr));
     }
+
 
     @GetMapping(Endpoint.V1.Car.DETAILS_FOR_OWNER)
     public ResponseEntity<Response<CarDetailResponseForOwnerDTO>> getCarDetailForOwner(
-            @PathVariable(name = "paymentId") Integer id) {
+            @PathVariable(name = "carId") Integer id) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.getCarDetailForOwner(id));
+    }
+
+    @GetMapping(Endpoint.V1.Car.REGISTER)
+    public ResponseEntity<Response<CarRegisterDetailResponseDTO>> getRegisterCar(@PathVariable(name = "carId") Integer id) {
+        return ResponseEntity.status(HttpStatus.OK).body(carService.getCarRegisterDetail(id));
+    }
+
+    @PatchMapping(Endpoint.V1.Car.REGISTER)
+    public ResponseEntity<Response<CarDetailResponseDTO>> registerCar(@PathVariable(name = "carId") Integer id, @RequestBody @Valid AddCarRequestDTO requestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(carService.registerCar(id, requestDTO));
     }
 
     @PatchMapping(Endpoint.V1.Car.DETAILS_FOR_OWNER)
     public ResponseEntity<Response<CarDetailResponseDTO>> updateCar(
-            @PathVariable(name = "paymentId") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
+            @PathVariable(name = "carId") Integer id, @RequestBody @Valid UpdCarRequestDTO requestDTO) {
         return ResponseEntity.status(HttpStatus.OK).body(carService.updateCar(id, requestDTO));
     }
 
+    @PatchMapping(Endpoint.V1.Car.UPD_INFO)
+    public ResponseEntity<Response<CarDetailResponseForOwnerDTO>> updateCarInfo(
+            @PathVariable(name = "carId") Integer id, @RequestBody @Valid UpdCarInfoRequestDTO requestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(carService.updateCarInfo(id, requestDTO));
+    }
+
+    @PatchMapping(Endpoint.V1.Car.UPD_PRICING)
+    public ResponseEntity<Response<CarDetailResponseForOwnerDTO>> updateCarPricing(
+            @PathVariable(name = "carId") Integer id, @RequestBody @Valid UpdCarPricingRequestDTO requestDTO) {
+        return ResponseEntity.status(HttpStatus.OK).body(carService.updateCarPricing(id, requestDTO));
+    }
+
     @PatchMapping(Endpoint.V1.Car.STATUS)
-    public ResponseEntity<Response<String>> changeStatus(@PathVariable(name = "paymentId") Integer carId) {
+    public ResponseEntity<Response<String>> changeStatus(@PathVariable(name = "carId") Integer carId) {
         User user =
                 (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.status(HttpStatus.OK).body(carService.changeCarStatus(carId));
@@ -86,8 +136,11 @@ public class CarController {
 
     @GetMapping(Endpoint.V1.Car.LIST_CAR_BOOKINGS)
     public ResponseEntity<MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>>> getListBookingByCarId(
-            @PathVariable(name = "paymentId") Integer carId, @ParameterObject MetaRequestDTO metaRequestDTO) {
+            @PathVariable(name = "carId") Integer carId, @ParameterObject MetaRequestDTO metaRequestDTO, @RequestParam(value = "status", required = false) EBookingStatus status) {
+        if(status == null) {
+            return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAllBookingForCar(metaRequestDTO, carId, AuthUtil.getRequestedUser().getId()));
+        }
         return ResponseEntity.status(HttpStatus.OK)
-                .body(bookingService.getAllBookingForCar(metaRequestDTO, carId, AuthUtil.getRequestedUser().getId()));
+                .body(bookingService.getAllBookingForCarByStatus(metaRequestDTO, carId, AuthUtil.getRequestedUser().getId(), status));
     }
 }

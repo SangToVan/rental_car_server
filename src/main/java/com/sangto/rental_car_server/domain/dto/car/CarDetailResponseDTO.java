@@ -1,5 +1,6 @@
 package com.sangto.rental_car_server.domain.dto.car;
 
+import com.sangto.rental_car_server.domain.dto.feedback.FeedbackResponseDTO;
 import com.sangto.rental_car_server.domain.dto.image.ImageResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
 import com.sangto.rental_car_server.domain.enums.ECarStatus;
@@ -30,10 +31,17 @@ public record CarDetailResponseDTO(
         String createdAt,
         String updatedAt,
         BigInteger basePrice,
+        Integer maxDeliveryDistance,
+        Integer deliveryFee,
+        Integer freeDeliveryDistance,
+        Integer kmPerDay,
+        Integer kmOverDayFee,
         ECarStatus status,
         Double rating,
         Integer bookingCount,
         List<ImageResponseDTO> images,
-        UserDetailResponseDTO carOwner
+        UserDetailResponseDTO carOwner,
+        List<FeedbackResponseDTO> feedbacks,
+        Boolean isOwner
 ) {
 }

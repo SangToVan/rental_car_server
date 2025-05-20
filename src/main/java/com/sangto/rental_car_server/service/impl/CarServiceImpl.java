@@ -10,6 +10,7 @@ import com.sangto.rental_car_server.domain.entity.Car;
 import com.sangto.rental_car_server.domain.entity.Image;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.enums.ECarStatus;
+import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.mapper.CarMapper;
 import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.CarRepository;
@@ -28,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -63,7 +65,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> getListCarsByOwnerId(MetaRequestDTO metaRequestDTO, Integer ownerId) {
+    public MetaResponse<MetaResponseDTO, List<CarResponseForOwnerDTO>> getListCarsByOwnerId(MetaRequestDTO metaRequestDTO, Integer ownerId) {
         Optional<User> findUser = userRepo.findById(ownerId);
         if (findUser.isEmpty()) throw new AppException("This owner is not existed");
 
@@ -76,8 +78,8 @@ public class CarServiceImpl implements CarService {
                 : carRepo.getListCarByOwnerWithKeyword(ownerId, metaRequestDTO.keyword(), pageable);
         if (page.getContent().isEmpty()) throw new AppException("List car is empty");
 
-        List<CarResponseDTO> li = page.getContent().stream()
-                .map(carMapper::toCarResponseDTO)
+        List<CarResponseForOwnerDTO> li = page.getContent().stream()
+                .map(carMapper::toCarResponseForOwnerDTO)
                 .toList();
 
         return MetaResponse.successfulResponse(
@@ -125,11 +127,31 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Response<CarDetailResponseDTO> getCarDetail(Integer carId) {
+    public Response<CarDetailResponseDTO> getCarDetail(Integer carId, Integer userId) {
+        Optional<Car> findCar = carRepo.findById(carId);
+        if (findCar.isEmpty()) throw new AppException("This car is not existed");
+
+        return Response.successfulResponse(
+                "Get car detail successfully", carMapper.toCarDetailResponseDTO(findCar.get(), userId)
+        );
+    }
+
+    @Override
+    public Response<CarDetailResponseForBookingDTO> getCarDetailForBooking(Integer carId, Integer userId, String startDateTime, String endDateTime) {
+        Optional<Car> findCar = carRepo.findById(carId);
+        if (findCar.isEmpty()) throw new AppException("This car is not existed");
+
+        return Response.successfulResponse(
+                "Get car detail successfully", carMapper.toCarDetailResponseForBookingDTO(findCar.get(), userId, startDateTime, endDateTime)
+        );
+    }
+
+    @Override
+    public Response<CarRegisterDetailResponseDTO> getCarRegisterDetail(Integer carId) {
         Optional<Car> findCar = carRepo.findById(carId);
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
         return Response.successfulResponse(
-                "Get car detail successfully", carMapper.toCarDetailResponseDTO(findCar.get())
+                "Get car register detail successfully", carMapper.toCarRegisterDetailResponseDTO(findCar.get())
         );
     }
 
@@ -146,6 +168,7 @@ public class CarServiceImpl implements CarService {
     public Response<CarDetailResponseDTO> addCar(Integer ownerId, AddCarRequestDTO requestDTO) {
         Optional<User> findUser = userRepo.findById(ownerId);
         if (findUser.isEmpty()) throw new AppException("This owner is not existed");
+        User user = findUser.get();
 
         Car newCar = carMapper.addCarRequestDTOtoEntity(requestDTO);
         newCar.setCarOwner(findUser.get());
@@ -163,12 +186,45 @@ public class CarServiceImpl implements CarService {
                 newCar.addImage(imageUpload);
             }
             Car saveCar = carRepo.save(newCar);
+            if(user.getRole() == EUserRole.CUSTOMER) {
+                user.setRole(EUserRole.OWNER);
+                userRepo.save(user);
+            }
             return Response.successfulResponse(
-                    "Add car successfully", carMapper.toCarDetailResponseDTO(saveCar)
+                    "Add car successfully", carMapper.toCarDetailResponseDTO(saveCar, ownerId)
             );
         } catch (IOException e) {
             throw new AppException("Add new car unsuccessfully");
         }
+    }
+
+    @Override
+    public Response<CarDetailResponseDTO> registerCar(Integer carId, AddCarRequestDTO requestDTO) {
+        Optional<Car> findCar = carRepo.findById(carId);
+        if (findCar.isEmpty()) throw new AppException("This car is not existed");
+        Car car = carMapper.registerRequestDTOtoEntity(findCar.get(), requestDTO);
+        // Set Image for Car
+        try {
+            for (String item : requestDTO.images()) {
+                Map resultUpload = cloudinaryService.uploadFileBase64(item, carFolder);
+                Image imageUpload = Image.builder()
+                        .name((String) resultUpload.get("original_filename"))
+                        .imageUrl((String) resultUpload.get("url"))
+                        .imagePublicId((String) resultUpload.get("public_id"))
+                        .createdAt(LocalDate.now())
+                        .build();
+                car.addImage(imageUpload);
+            }
+            Car saveCar = carRepo.save(car);
+
+            return Response.successfulResponse(
+                    "Register car successfully", carMapper.toCarDetailResponseDTO(saveCar, saveCar.getCarOwner().getId())
+            );
+        } catch (IOException e) {
+            throw new AppException("Register new car unsuccessfully");
+        }
+
+
     }
 
     @Override
@@ -187,7 +243,31 @@ public class CarServiceImpl implements CarService {
         newCar.setImages(newImage);
         Car savedCar = carRepo.save(newCar);
         return Response.successfulResponse(
-                "Update car successfully", carMapper.toCarDetailResponseDTO(savedCar)
+                "Update car successfully", carMapper.toCarDetailResponseDTO(savedCar, savedCar.getCarOwner().getId())
+        );
+    }
+
+    @Override
+    public Response<CarDetailResponseForOwnerDTO> updateCarInfo(Integer carId, UpdCarInfoRequestDTO requestDTO) {
+        Optional<Car> oldCar = carRepo.findById(carId);
+        if (oldCar.isEmpty()) throw new AppException("This car is not existed");
+        Car newCar = carMapper.updCarInfoRequestDTOtoEntity(oldCar.get(), requestDTO);
+
+        Car savedCar = carRepo.save(newCar);
+        return Response.successfulResponse(
+                "Update car info successfully", carMapper.toCarDetailResponseForOwnerDTO(savedCar)
+        );
+    }
+
+    @Override
+    public Response<CarDetailResponseForOwnerDTO> updateCarPricing(Integer carId, UpdCarPricingRequestDTO requestDTO) {
+        Optional<Car> oldCar = carRepo.findById(carId);
+        if (oldCar.isEmpty()) throw new AppException("This car is not existed");
+        Car newCar = carMapper.updCarPricingRequestDTOtoEntity(oldCar.get(), requestDTO);
+
+        Car savedCar = carRepo.save(newCar);
+        return Response.successfulResponse(
+                "Update car pricing successfully", carMapper.toCarDetailResponseForOwnerDTO(savedCar)
         );
     }
 
@@ -197,7 +277,7 @@ public class CarServiceImpl implements CarService {
         if (findCar.isEmpty()) throw new AppException("This car is not existed");
         Car car = findCar.get();
 
-        if (car.getStatus() == ECarStatus.UNVERIFIED) {
+        if (car.getStatus() == ECarStatus.UNVERIFIED || car.getStatus() == ECarStatus.WAITING) {
             car.setStatus(ECarStatus.ACTIVE);
         } else {
             car.setStatus(ECarStatus.UNVERIFIED);
@@ -230,16 +310,29 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> searchCarV2(String address, String startTime, String endTime, MetaRequestDTO metaRequestDTO) {
+    public MetaResponse<MetaResponseDTO, List<CarResponseDTO>> searchCarV2(
+            String address, String startTime, String endTime,
+            String brand, Integer numberOfSeats, String transmission, String fuelType,
+            BigDecimal minPrice, BigDecimal maxPrice,
+            MetaRequestDTO metaRequestDTO) {
+
         String field = metaRequestDTO.sortField();
         if (field.compareTo(MetaConstant.Sorting.DEFAULT_FIELD) == 0) field = "car_id";
+
         Sort sort = metaRequestDTO.sortDir().equals(MetaConstant.Sorting.DEFAULT_DIRECTION)
                 ? Sort.by(field).ascending()
                 : Sort.by(field).descending();
+
         Pageable pageable = PageRequest.of(metaRequestDTO.currentPage(), metaRequestDTO.pageSize(), sort);
-        Page<Car> page = carRepo.searchCarV2(address, startTime, endTime, pageable);
+        if (address != null && !address.isBlank()) {
+            address = "%" + address.trim().replaceAll("\\s+", " ") + "%";
+        }
+
+        Page<Car> page = carRepo.searchCarV2(
+                address, startTime, endTime, brand, numberOfSeats, transmission, fuelType, minPrice, maxPrice, pageable);
 
         if (page.getContent().isEmpty()) throw new AppException("List car is empty");
+
         List<CarResponseDTO> li = page.getContent().stream()
                 .map(carMapper::toCarResponseDTO)
                 .toList();
@@ -258,4 +351,5 @@ public class CarServiceImpl implements CarService {
                         .build(),
                 li);
     }
+
 }
