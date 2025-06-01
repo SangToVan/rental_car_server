@@ -1,9 +1,6 @@
 package com.sangto.rental_car_server.service;
 
-import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
+import com.sangto.rental_car_server.domain.dto.booking.*;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
@@ -15,6 +12,7 @@ import com.sangto.rental_car_server.responses.Response;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BookingService {
@@ -33,6 +31,8 @@ public interface BookingService {
     MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCar(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId);
 
     MetaResponse<MetaResponseDTO, List<BookingResponseForOwnerDTO>> getAllBookingForCarByStatus(MetaRequestDTO metaRequestDTO, Integer carId, Integer ownerId, EBookingStatus status);
+
+    Response<BookingStatisticsResponseDTO> getBookingStatistics(Integer ownerId, LocalDateTime startDate, LocalDateTime endDate);
 
     Response<BookingDetailResponseDTO> getBookingDetail(Integer bookingId);
 

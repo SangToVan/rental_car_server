@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -76,6 +77,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
     @Query("SELECT b FROM Booking b WHERE b.status = :status AND b.endDateTime > :reminderTime")
     List<Booking> findByStatusAndEndDateTime(@Param("status") EBookingStatus status, @Param("reminderTime") LocalDateTime reminderTime);
+
     @Query("SELECT b FROM Booking b WHERE b.car.carOwner.id = :ownerId AND b.status = :status")
     List<Booking> findByCarOwnerIdAndBookingStatus(@Param("ownerId") Integer ownerId, @Param("status") EBookingStatus status);
 
@@ -89,12 +91,84 @@ public interface BookingRepository extends JpaRepository<Booking, Integer> {
     int countBookingsInMonth(@Param("startOfMonth") LocalDateTime startOfMonth, @Param("endOfMonth") LocalDateTime endOfMonth);
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND b.status = 'COMPLETED'")
-    int countCompletedBookingsByCarId(@Param("carId") Integer carId);
+    Integer countCompletedBookingsByCarId(@Param("carId") Integer carId);
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND (b.status = 'PENDING' OR b.status = 'PAID')")
-    int countPendingBookingsByCarId(@Param("carId") Integer carId);
+    Integer countPendingBookingsByCarId(@Param("carId") Integer carId);
 
     @Query("SELECT COUNT(b) FROM Booking b WHERE b.car.id = :carId AND (b.status = 'CONFIRMED' OR b.status = 'IN_PROGRESS' OR b.status = 'RETURNED')")
-    int countInProgressBookingsByCarId(@Param("carId") Integer carId);
+    Integer countInProgressBookingsByCarId(@Param("carId") Integer carId);
+
+    @Query("""
+                SELECT COUNT(b) FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = :status
+                  AND b.startDateTime BETWEEN :startTime AND :endTime
+            """)
+    Integer countBookingsByStatusAndOwnerAndTime(
+            @Param("ownerId") Integer ownerId,
+            @Param("status") EBookingStatus status,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+                SELECT COUNT(b) FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = :status
+            """)
+    Integer countBookingsByStatusAndOwner(
+            @Param("ownerId") Integer ownerId,
+            @Param("status") EBookingStatus status
+            );
+
+    @Query("""
+                SELECT b FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = :status
+                  AND b.startDateTime BETWEEN :startTime AND :endTime
+                ORDER BY b.startDateTime ASC
+            """)
+    List<Booking> findBookingsByOwnerAndStatus(
+            @Param("ownerId") Integer ownerId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime,
+            @Param("status") EBookingStatus status);
+
+    @Query("""
+                SELECT b FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = :status
+                ORDER BY b.startDateTime ASC
+            """)
+    List<Booking> findAllBookingsByOwnerAndStatus(
+            @Param("ownerId") Integer ownerId,
+            @Param("status") EBookingStatus status);
+
+    @Query("""
+                SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = 'COMPLETED'
+                  AND b.startDateTime BETWEEN :startTime AND :endTime
+            """)
+    BigDecimal getTotalRevenueByOwnerAndTime(
+            @Param("ownerId") Integer ownerId,
+            @Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+                SELECT COALESCE(SUM(b.totalPrice), 0) FROM Booking b
+                JOIN b.car c
+                WHERE c.carOwner.id = :ownerId
+                  AND b.status = 'COMPLETED'
+            """)
+    BigDecimal getTotalRevenueByOwner(
+            @Param("ownerId") Integer ownerId);
 
 }
+
+

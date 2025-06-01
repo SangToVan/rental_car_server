@@ -4,6 +4,7 @@ import com.sangto.rental_car_server.constant.Endpoint;
 import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
+import com.sangto.rental_car_server.domain.dto.booking.BookingStatisticsResponseDTO;
 import com.sangto.rental_car_server.domain.dto.feedback.AddFeedbackRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
@@ -22,12 +23,16 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Tag(name = "Bookings")
@@ -62,6 +67,34 @@ public class BookingController {
                 Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getFinishedBookingForUser(metaRequestDTO,userId));
     }
+
+    @GetMapping(Endpoint.V1.Booking.STATISTICS)
+    public ResponseEntity<Response<BookingStatisticsResponseDTO>> getBookingStatistics(
+            HttpServletRequest servletRequest,
+            @RequestParam(value = "startDate", required = false) String startDateStr,
+            @RequestParam(value = "endDate", required = false) String endDateStr
+    ) throws BadRequestException {
+        Integer userId = Integer.valueOf(
+                jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION))
+        );
+
+        // Parse string → LocalDateTime, cho phép null
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+        try {
+            if (startDateStr != null) {
+                startDate = LocalDateTime.parse(startDateStr, formatter);
+            }
+            if (endDateStr != null) {
+                endDate = LocalDateTime.parse(endDateStr, formatter);
+            }
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Ngày không đúng định dạng yyyy-MM-dd'T'HH:mm:ss");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingStatistics(userId, startDate, endDate));
+    }
+
 
     @GetMapping(Endpoint.V1.Booking.DETAILS)
     public ResponseEntity<Response<BookingDetailResponseDTO>> getDetailBooking(

@@ -62,6 +62,7 @@ public class Endpoint {
             public static final String LIST_FOR_USER = BASE + "/own";
             public static final String LIST_UNFINISHED = BASE + "/own/unfinished";
             public static final String LIST_FINISHED = BASE + "/own/finished";
+            public static final String STATISTICS = BASE + "/statistics";
             public static final String DETAILS = BASE + "/{bookingId}";
             public static final String PAYMENT_BOOKING = BASE + "/{bookingId}/payment-booking";
             public static final String CONFIRM_BOOKING = BASE + "/{bookingId}/confirm-booking";

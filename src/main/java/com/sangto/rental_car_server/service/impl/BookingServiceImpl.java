@@ -3,10 +3,7 @@ package com.sangto.rental_car_server.service.impl;
 import com.sangto.rental_car_server.constant.MailTemplate;
 import com.sangto.rental_car_server.constant.MetaConstant;
 import com.sangto.rental_car_server.constant.TimeFormatConstant;
-import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
-import com.sangto.rental_car_server.domain.dto.booking.BookingResponseForOwnerDTO;
+import com.sangto.rental_car_server.domain.dto.booking.*;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.meta.SortingDTO;
@@ -46,6 +43,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -270,6 +268,34 @@ public class BookingServiceImpl implements BookingService {
                         .build(),
                 li
         );
+    }
+
+    @Override
+    public Response<BookingStatisticsResponseDTO> getBookingStatistics(Integer ownerId, LocalDateTime startDate, LocalDateTime endDate) {
+
+        List<BookingResponseForOwnerDTO> listResponse = null;
+        Integer countComplete = 0;
+        Integer countCancelled = 0;
+        BigDecimal revenue = BigDecimal.ZERO;
+        if (startDate != null && endDate != null) {
+            revenue = bookingRepo.getTotalRevenueByOwnerAndTime(ownerId, startDate, endDate);
+            countComplete = bookingRepo.countBookingsByStatusAndOwnerAndTime(ownerId, EBookingStatus.COMPLETED, startDate, endDate);
+            countCancelled = bookingRepo.countBookingsByStatusAndOwnerAndTime(ownerId, EBookingStatus.CANCELLED, startDate, endDate);
+            listResponse = bookingRepo.findBookingsByOwnerAndStatus(ownerId, startDate, endDate, EBookingStatus.COMPLETED).stream().map(bookingMapper::toBookingResponseForOwnerDTO).toList();
+        } else {
+            revenue = bookingRepo.getTotalRevenueByOwner(ownerId);
+            countComplete = bookingRepo.countBookingsByStatusAndOwner(ownerId, EBookingStatus.COMPLETED);
+            countCancelled = bookingRepo.countBookingsByStatusAndOwner(ownerId, EBookingStatus.CANCELLED);
+            listResponse = bookingRepo.findAllBookingsByOwnerAndStatus(ownerId, EBookingStatus.COMPLETED).stream().map(bookingMapper::toBookingResponseForOwnerDTO).toList();
+        }
+
+        return Response.successfulResponse("Get booking statistics successfully",
+                BookingStatisticsResponseDTO.builder()
+                        .revenue(revenue.toString())
+                        .countCancelled(countCancelled)
+                        .countCompleted(countComplete)
+                        .list(listResponse)
+                        .build());
     }
 
     @Override
