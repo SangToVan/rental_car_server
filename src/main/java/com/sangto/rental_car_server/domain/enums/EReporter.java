@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public enum EReportTargetType {
-    CAR("Car"),
+public enum EReporter {
     CUSTOMER("Customer"),
     OWNER("Car owner");
 

@@ -23,10 +23,10 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Users")
-@RestController
-@RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
+    @Tag(name = "Users")
+    @RestController
+    @RequiredArgsConstructor
+    @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;

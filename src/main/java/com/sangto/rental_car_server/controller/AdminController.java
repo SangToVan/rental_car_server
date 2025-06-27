@@ -6,14 +6,18 @@ import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.brand.AddCarBrandRequestDTO;
 import com.sangto.rental_car_server.domain.dto.car.CarDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.model.AddCarModelRequestDTO;
+import com.sangto.rental_car_server.domain.dto.report.ReportDetailResponseDTO;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Admin")
 @RestController
@@ -53,6 +57,21 @@ public class AdminController {
     @GetMapping(Endpoint.V1.Admin.DETAIL_BOOKING)
     public ResponseEntity<Response<BookingDetailResponseDTO>> getBookingDetail(@PathVariable(name = "bookingId") Integer bookingId) {
         return ResponseEntity.ok(adminService.getBookingDetail(bookingId));
+    }
+
+    @PatchMapping(Endpoint.V1.Admin.CANCEL_BOOKING_CUSTOMER)
+    public ResponseEntity<Response<BookingDetailResponseDTO>> cancelBookingCustomer(@PathVariable(name = "bookingId") Integer bookingId) throws MessagingException {
+        return ResponseEntity.ok(adminService.cancelBookingForCustomer(bookingId));
+    }
+
+    @PatchMapping(Endpoint.V1.Admin.CANCEL_BOOKING_OWNER)
+    public ResponseEntity<Response<BookingDetailResponseDTO>> cancelBookingOwner(@PathVariable(name = "bookingId") Integer bookingId) throws MessagingException {
+        return ResponseEntity.ok(adminService.cancelBookingForOwner(bookingId));
+    }
+
+    @GetMapping(Endpoint.V1.Admin.REPORT)
+    public ResponseEntity<Response<List<ReportDetailResponseDTO>>> getReport(@PathVariable(name = "bookingId") Integer bookingId) {
+        return ResponseEntity.ok(adminService.getListReport(bookingId));
     }
 
     @GetMapping(Endpoint.V1.Admin.USER)

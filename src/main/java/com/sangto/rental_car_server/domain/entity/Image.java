@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Table(name = "images")
@@ -37,4 +36,8 @@ public class Image {
     @ManyToOne(targetEntity = Car.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "car_id")
     private Car car;
+
+    @ManyToOne(targetEntity = Report.class, fetch = FetchType.LAZY)
+    @JoinColumn(name = "report_id")
+    private Report report;
 }

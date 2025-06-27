@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface FeedbackService {
-    Feedback addFeedback(Integer userId, Integer bookingId, AddFeedbackRequestDTO requestDTO);
+    Response<String> addFeedback(Integer userId, Integer bookingId, AddFeedbackRequestDTO requestDTO);
 
     MetaResponse<MetaResponseDTO, List<FeedbackResponseDTO>> getListFeedbackByOwner(
             Integer ownerId, Integer rating, MetaRequestDTO metaRequestDTO);

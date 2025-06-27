@@ -1,11 +1,13 @@
 package com.sangto.rental_car_server.service.impl;
 
+import com.sangto.rental_car_server.constant.MailTemplate;
 import com.sangto.rental_car_server.domain.dto.admin.*;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.car.CarDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.car.CarResponseDTO;
 import com.sangto.rental_car_server.domain.dto.escrow_transaction.EscrowTransactionResponseDTO;
+import com.sangto.rental_car_server.domain.dto.report.ReportDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.transaction.TransactionResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.user.UserResponseDTO;
@@ -14,7 +16,7 @@ import com.sangto.rental_car_server.domain.entity.Booking;
 import com.sangto.rental_car_server.domain.entity.Car;
 import com.sangto.rental_car_server.domain.entity.User;
 import com.sangto.rental_car_server.domain.entity.Wallet;
-import com.sangto.rental_car_server.domain.enums.ECarStatus;
+import com.sangto.rental_car_server.domain.enums.EBookingStatus;
 import com.sangto.rental_car_server.domain.enums.EUserRole;
 import com.sangto.rental_car_server.domain.enums.EVerifiedLicense;
 import com.sangto.rental_car_server.domain.mapper.*;
@@ -22,11 +24,16 @@ import com.sangto.rental_car_server.exceptions.AppException;
 import com.sangto.rental_car_server.repository.*;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.AdminService;
+import com.sangto.rental_car_server.service.PaymentService;
+import com.sangto.rental_car_server.utility.MailSenderUtil;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -37,7 +44,9 @@ public class AdminServiceImpl implements AdminService {
     private final TransactionRepository transactionRepo;
     private final CarRepository carRepo;
     private final BookingRepository bookingRepo;
+    private final ReportRepository reportRepo;
     private final EscrowTransactionRepository escrowTransactionRepo;
+    private final PaymentService paymentService;
 
     private final TransactionMapper transactionMapper;
     private final CarMapper carMapper;
@@ -45,6 +54,8 @@ public class AdminServiceImpl implements AdminService {
     private final EscrowTransactionMapper escrowTransactionMapper;
     private final UserMapper userMapper;
     private final WalletMapper walletMapper;
+    private final ReportMapper reportMapper;
+    private final MailSenderUtil mailSenderUtil;
 
     @Override
     public Response<DashboardResponseDTO> getDashboard() {
@@ -129,6 +140,101 @@ public class AdminServiceImpl implements AdminService {
 
         return Response.successfulResponse("Get booking detail successfully",
                 bookingMapper.toBookingDetailResponseDTO(findBooking.get()));
+    }
+
+    @Override
+    public Response<List<ReportDetailResponseDTO>> getListReport(Integer bookingId) {
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        List<ReportDetailResponseDTO> list = reportRepo.findReportByBookingId(bookingId).stream().map(reportMapper::toReportDetailResponseDTO).toList();
+
+        return Response.successfulResponse("Get list report successfully", list);
+    }
+
+    @Override
+    public Response<BookingDetailResponseDTO> cancelBookingForCustomer(Integer bookingId) throws MessagingException {
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        Booking booking = findBooking.get();
+
+        User customer = booking.getUser();
+        User owner = booking.getCar().getCarOwner();
+        Car car = booking.getCar();
+
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+            // booking is paid or confirmed
+        } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+            paymentService.refundPayment(booking.getId());
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+        } else {
+            throw new AppException("Booking is in progress, cannot cancel");
+        }
+
+        // Send mail
+        String toMailCustomer = customer.getEmail();
+        String toMailOwner = owner.getEmail();
+
+        String subject = MailTemplate.CANCEL_BOOKING.ADMIN_CANCEL_BOOKING_SUBJECT;
+        String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String cancelTime = now.format(formatter).toString();
+        Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
+
+        mailSenderUtil.sendMailWithHTML(toMailCustomer, subject, template, variable);
+        mailSenderUtil.sendMailWithHTML(toMailOwner, subject, template, variable);
+
+        return Response.successfulResponse(
+                "Confirm cancelled successfully"
+        );
+    }
+
+    @Override
+    public Response<BookingDetailResponseDTO> cancelBookingForOwner(Integer bookingId) throws MessagingException {
+        Optional<Booking> findBooking = bookingRepo.findById(bookingId);
+        if (findBooking.isEmpty()) throw new AppException("This booking is not existed");
+        Booking booking = findBooking.get();
+
+        User customer = booking.getUser();
+        User owner = booking.getCar().getCarOwner();
+        Car car = booking.getCar();
+
+        if (booking.getStatus() == EBookingStatus.PENDING) {
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+            // booking is paid or confirmed
+        } else if (booking.getStatus() == EBookingStatus.CONFIRMED || booking.getStatus() == EBookingStatus.PAID) {
+            paymentService.releasePayment(booking.getId());
+            booking.setStatus(EBookingStatus.CANCELLED);
+            bookingRepo.save(booking);
+
+        } else {
+            throw new AppException("Booking is in progress, cannot cancel");
+        }
+
+        // Send mail
+        String toMailCustomer = customer.getEmail();
+        String toMailOwner = owner.getEmail();
+
+        String subject = MailTemplate.CANCEL_BOOKING.ADMIN_CANCEL_BOOKING_SUBJECT;
+        String template = MailTemplate.CANCEL_BOOKING.CANCEL_BOOKING_TEMPLATE;
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String cancelTime = now.format(formatter).toString();
+        Map<String, Object> variable = Map.of("carName", car.getName(), "cancelTime", cancelTime);
+
+        mailSenderUtil.sendMailWithHTML(toMailCustomer, subject, template, variable);
+        mailSenderUtil.sendMailWithHTML(toMailOwner, subject, template, variable);
+
+        return Response.successfulResponse(
+                "Confirm cancelled successfully"
+        );
     }
 
     @Override

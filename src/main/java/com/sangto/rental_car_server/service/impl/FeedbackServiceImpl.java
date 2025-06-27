@@ -47,7 +47,7 @@ public class FeedbackServiceImpl implements FeedbackService {
 
     @Override
     @Transactional
-    public Feedback addFeedback(Integer userId, Integer bookingId, AddFeedbackRequestDTO requestDTO) {
+    public Response<String> addFeedback(Integer userId, Integer bookingId, AddFeedbackRequestDTO requestDTO) {
         Booking booking = bookingService.verifyBookingCustomer(userId, bookingId);
 
         if (booking.getStatus() != EBookingStatus.RETURNED && booking.getStatus() != EBookingStatus.COMPLETED) {
@@ -67,7 +67,7 @@ public class FeedbackServiceImpl implements FeedbackService {
             car.setRating(ratingCar);
             carRepo.save(car);
 
-            return savedFeedback;
+            return Response.successfulResponse("Add feedback successfully");
 
         }
         Feedback newFeedback = feedbackMapper.addFeedbackRequestToEntity(requestDTO);
@@ -79,7 +79,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         car.setRating(ratingCar);
         carRepo.save(car);
 
-        return savedFeedback;
+        return Response.successfulResponse("Add feedback successfully");
     }
 
     @Override

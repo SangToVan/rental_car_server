@@ -5,7 +5,7 @@ import com.sangto.rental_car_server.domain.dto.report.UpdReportRequestDTO;
 import com.sangto.rental_car_server.responses.Response;
 
 public interface ReportService {
-    Response<String> addReport(AddReportRequestDTO requestDTO);
+    Response<String> addReport(Integer userId, Integer bookingId, AddReportRequestDTO requestDTO);
 
     Response<String> updateReport(UpdReportRequestDTO requestDTO);
 

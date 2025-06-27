@@ -23,6 +23,9 @@ public class Endpoint {
             public static final String UNVERIFY_USER = BASE + "/users/{userId}/unverify";
             public static final String BOOKING = BASE + "/bookings";
             public static final String DETAIL_BOOKING = BASE + "/bookings/{bookingId}";
+            public static final String CANCEL_BOOKING_CUSTOMER = BASE + "/bookings/{bookingId}/cancel_customer";
+            public static final String CANCEL_BOOKING_OWNER = BASE + "/bookings/{bookingId}/owner";
+            public static final String REPORT = BASE + "/bookings/{bookingId}/report";
             public static final String GET_WALLET = BASE + "/wallet";
             public static final String BRAND = BASE + "/brands";
             public static final String MODEL = BASE + "/models";
@@ -43,6 +46,7 @@ public class Endpoint {
             public static final String CHANGE_ROLE = BASE + "/change-role";
             public static final String GET_WALLET = BASE + "/wallet";
             public static final String UPDATE_WALLET = BASE + "/wallet";
+            public static final String EXPORT_EXCEL = BASE + "/export";
         }
 
         public static final class Car {
@@ -70,6 +74,7 @@ public class Endpoint {
             public static final String CONFIRM_RETURN = BASE + "/{bookingId}/confirm-return";
             public static final String COMPLETE_BOOKING = BASE + "/{bookingId}/complete-booking";
             public static final String CANCELLED_BOOKING = BASE + "/{bookingId}/cancel";
+            public static final String REPORT = BASE + "/{bookingId}/report";
             public static final String FEEDBACK = BASE + "/{bookingId}/feedback";
         }
 

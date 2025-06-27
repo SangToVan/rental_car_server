@@ -5,16 +5,19 @@ import com.sangto.rental_car_server.domain.dto.booking.AddBookingRequestDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingDetailResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingResponseDTO;
 import com.sangto.rental_car_server.domain.dto.booking.BookingStatisticsResponseDTO;
+import com.sangto.rental_car_server.domain.dto.car.AddCarRequestDTO;
 import com.sangto.rental_car_server.domain.dto.feedback.AddFeedbackRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaRequestDTO;
 import com.sangto.rental_car_server.domain.dto.meta.MetaResponseDTO;
 import com.sangto.rental_car_server.domain.dto.payment.AddPaymentRequestDTO;
 import com.sangto.rental_car_server.domain.dto.payment.PaymentResponseDTO;
+import com.sangto.rental_car_server.domain.dto.report.AddReportRequestDTO;
 import com.sangto.rental_car_server.domain.entity.Feedback;
 import com.sangto.rental_car_server.responses.MetaResponse;
 import com.sangto.rental_car_server.responses.Response;
 import com.sangto.rental_car_server.service.BookingService;
 import com.sangto.rental_car_server.service.FeedbackService;
+import com.sangto.rental_car_server.service.ReportService;
 import com.sangto.rental_car_server.utility.AuthUtil;
 import com.sangto.rental_car_server.utility.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,6 +44,7 @@ import java.util.List;
 @SecurityRequirement(name = "bearerAuth")
 public class BookingController {
     private final BookingService bookingService;
+    private final ReportService reportService;
     private final FeedbackService feedbackService;
     private final JwtTokenUtil jwtTokenUtil;
 
@@ -153,12 +157,19 @@ public class BookingController {
                 .body(bookingService.cancelBooking(bookingId, AuthUtil.getRequestedUser().getId()));
     }
 
+    @PostMapping(Endpoint.V1.Booking.REPORT)
+    public ResponseEntity<Response<String>> reportBooking(@PathVariable(name = "bookingId") Integer bookingId, HttpServletRequest servletRequest, @RequestBody @Valid AddReportRequestDTO requestDTO) {
+        Integer userId =
+                Integer.valueOf(jwtTokenUtil.getAccountId(servletRequest.getHeader(HttpHeaders.AUTHORIZATION)));
+
+        return ResponseEntity.status(HttpStatus.OK).body(reportService.addReport(userId, bookingId, requestDTO));
+    }
+
     @PostMapping(Endpoint.V1.Booking.FEEDBACK)
-    public ResponseEntity<Response<Feedback>> giveRating(
+    public ResponseEntity<Response<String>> giveRating(
             @PathVariable(name = "bookingId") Integer bookingId, @RequestBody @Valid AddFeedbackRequestDTO requestDTO) {
-        Feedback feedback =
-                feedbackService.addFeedback(AuthUtil.getRequestedUser().getId(), bookingId, requestDTO);
+
         return ResponseEntity.status(HttpStatus.OK)
-                .body(Response.successfulResponse("Send feedback successfully", feedback));
+                .body(feedbackService.addFeedback(AuthUtil.getRequestedUser().getId(), bookingId, requestDTO));
     }
 }
