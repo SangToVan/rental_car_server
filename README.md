@@ -72,27 +72,27 @@ npm start
 ## 🖼️ Ảnh minh họa
 
 <!-- Thêm ảnh screenshot giao diện -->
-
+-- Trang chủ
 ![Trang chủ](docs/screenshots/homepage.png)
---
+-- Đăng nhập
 ![Đăng nhập](docs/screenshots/login.png) ![Đăng ký](docs/screenshots/signup.png)
---
+-- Kết quả tìm kiếm
 ![Tìm kiếm](docs/screenshots/search.png)
---
+-- Thông tin xe
 ![Thông tin xe](docs/screenshots/car_info.png)
---
+-- Quản lý đơn đặt
 ![Quản lý đơn](docs/screenshots/booking_manage.png)
---
+-- Thông tin đơn đặt xe
 ![Thông tin đơn](docs/screenshots/booking_info.png)
---
+-- Thanh toán đơn
 ![Thanh toán](docs/screenshots/payment.png)
---
+-- Thông tin user
 ![Thông tin user](docs/screenshots/user_info.png)
---
+-- Đăng ký xe
 ![Thêm xe](docs/screenshots/add_car.png)
---
+-- Quản lý xe
 ![Quản lý xe](docs/screenshots/car_manage.png)
---
+-- Báo cáo
 ![Báo cáo](docs/screenshots/report.png)
 ---
 
